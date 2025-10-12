@@ -1,6 +1,31 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  /* Custom Colors */
+  --color-background: #0a0a0a;
+  --color-background-card: #1a1a1a;
+  --color-background-input: #2a2a2a;
+
+  --color-accent-green: #00ff88;
+  --color-accent-blue: #00d9ff;
+  --color-accent-purple: #b57bff;
+
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #a0a0a0;
+  --color-text-muted: #666666;
+
+  /* Border Radius */
+  --radius-card: 12px;
+  --radius-input: 8px;
+
+  /* Max Width */
+  --max-width-container: 1400px;
+  --max-width-form: 800px;
+
+  /* Spacing */
+  --spacing-mobile: 24px;
+  --spacing-desktop: 48px;
+}
 
 @layer base {
   * {
