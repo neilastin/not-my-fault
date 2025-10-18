@@ -1,9 +1,12 @@
 import { useState, type FormEvent, type ChangeEvent } from 'react';
-import { AUDIENCE_OPTIONS, IMPORTANCE_OPTIONS } from '@/lib/constants';
+import { motion } from 'framer-motion';
+import { AUDIENCE_OPTIONS } from '@/lib/constants';
+import type { TaglineVariation } from '@/lib/taglineVariations';
 import { cn } from '@/lib/utils';
 
 interface ExcuseFormProps {
-  onSubmit: (data: { scenario: string; audience: string; importance: string }) => void;
+  variation: TaglineVariation;
+  onSubmit: (data: { scenario: string; audience: string }) => void;
   isLoading: boolean;
   disabled?: boolean;
 }
@@ -11,13 +14,11 @@ interface ExcuseFormProps {
 interface FormErrors {
   scenario?: string;
   audience?: string;
-  importance?: string;
 }
 
-export default function ExcuseForm({ onSubmit, isLoading, disabled = false }: ExcuseFormProps) {
+export default function ExcuseForm({ variation, onSubmit, isLoading, disabled = false }: ExcuseFormProps) {
   const [scenario, setScenario] = useState('');
   const [audience, setAudience] = useState('');
-  const [importance, setImportance] = useState('');
   const [formErrors, setFormErrors] = useState<FormErrors>({});
 
   const validateForm = (): boolean => {
@@ -30,11 +31,7 @@ export default function ExcuseForm({ onSubmit, isLoading, disabled = false }: Ex
     }
 
     if (!audience) {
-      errors.audience = 'Please select who needs to believe this';
-    }
-
-    if (!importance) {
-      errors.importance = 'Please select how important this is';
+      errors.audience = 'Please select your audience';
     }
 
     setFormErrors(errors);
@@ -51,7 +48,6 @@ export default function ExcuseForm({ onSubmit, isLoading, disabled = false }: Ex
     onSubmit({
       scenario: scenario.trim(),
       audience,
-      importance,
     });
   };
 
@@ -69,33 +65,27 @@ export default function ExcuseForm({ onSubmit, isLoading, disabled = false }: Ex
     }
   };
 
-  const handleImportanceChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    setImportance(e.target.value);
-    if (formErrors.importance) {
-      setFormErrors((prev) => ({ ...prev, importance: undefined }));
-    }
-  };
-
-  const isFormValid = scenario.trim().length >= 10 && audience && importance;
+  const isFormValid = scenario.trim().length >= 10 && audience;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 bg-background-card p-6 md:p-8 rounded-card shadow-lg">
       {/* Scenario Textarea */}
       <div className="space-y-2">
         <label htmlFor="scenario" className="text-text-primary font-medium mb-2 block">
-          What's not your fault?
+          {variation.formLabels.situation}
         </label>
         <textarea
           id="scenario"
           value={scenario}
           onChange={handleScenarioChange}
-          placeholder="I missed the meeting because..."
-          rows={4}
+          placeholder={variation.formLabels.placeholder}
+          rows={3}
           disabled={isLoading || disabled}
           className={cn(
-            'w-full px-4 py-3 bg-background-input text-text-primary rounded-input border border-background-input transition-colors',
+            'w-full px-4 py-3 bg-background-input text-text-primary rounded-input border border-background-input',
             'placeholder:text-text-muted',
-            'focus:outline-none focus:ring-2 focus:ring-accent-green',
+            'focus:outline-none',
+            'input-glow',
             formErrors.scenario && 'border-red-400',
             (isLoading || disabled) && 'opacity-50 cursor-not-allowed'
           )}
@@ -113,7 +103,7 @@ export default function ExcuseForm({ onSubmit, isLoading, disabled = false }: Ex
       {/* Audience Select */}
       <div className="space-y-2">
         <label htmlFor="audience" className="text-text-primary font-medium mb-2 block">
-          Who needs to believe this?
+          {variation.formLabels.audience}
         </label>
         <select
           id="audience"
@@ -121,8 +111,9 @@ export default function ExcuseForm({ onSubmit, isLoading, disabled = false }: Ex
           onChange={handleAudienceChange}
           disabled={isLoading || disabled}
           className={cn(
-            'w-full px-4 py-3 bg-background-input text-text-primary rounded-input border border-background-input transition-colors',
-            'focus:outline-none focus:ring-2 focus:ring-accent-green',
+            'w-full px-4 py-3 bg-background-input text-text-primary rounded-input border border-background-input',
+            'focus:outline-none',
+            'input-glow',
             formErrors.audience && 'border-red-400',
             (isLoading || disabled) && 'opacity-50 cursor-not-allowed',
             !audience && 'text-text-muted'
@@ -147,59 +138,34 @@ export default function ExcuseForm({ onSubmit, isLoading, disabled = false }: Ex
         )}
       </div>
 
-      {/* Importance Select */}
-      <div className="space-y-2">
-        <label htmlFor="importance" className="text-text-primary font-medium mb-2 block">
-          How important is this?
-        </label>
-        <select
-          id="importance"
-          value={importance}
-          onChange={handleImportanceChange}
-          disabled={isLoading || disabled}
-          className={cn(
-            'w-full px-4 py-3 bg-background-input text-text-primary rounded-input border border-background-input transition-colors',
-            'focus:outline-none focus:ring-2 focus:ring-accent-green',
-            formErrors.importance && 'border-red-400',
-            (isLoading || disabled) && 'opacity-50 cursor-not-allowed',
-            !importance && 'text-text-muted'
-          )}
-          required
-          aria-invalid={!!formErrors.importance}
-          aria-describedby={formErrors.importance ? 'importance-error' : undefined}
-        >
-          <option value="" disabled>
-            Select importance level
-          </option>
-          {IMPORTANCE_OPTIONS.map((option) => (
-            <option key={option} value={option} className="text-text-primary">
-              {option}
-            </option>
-          ))}
-        </select>
-        {formErrors.importance && (
-          <p id="importance-error" className="text-red-400 text-sm mt-1">
-            {formErrors.importance}
-          </p>
-        )}
-      </div>
-
       {/* Submit Button */}
-      <button
+      <motion.button
         type="submit"
         disabled={!isFormValid || isLoading || disabled}
+        whileHover={
+          isFormValid && !isLoading && !disabled
+            ? {
+                scale: 1.02,
+                boxShadow: "0 0 30px rgba(0, 255, 136, 0.4)",
+              }
+            : {}
+        }
+        whileTap={
+          isFormValid && !isLoading && !disabled
+            ? { scale: 0.98 }
+            : {}
+        }
         className={cn(
           'w-full py-4 px-8 rounded-input font-bold text-lg transition-all duration-200',
           'bg-accent-green text-background',
           'shadow-lg shadow-accent-green/20',
           'focus:outline-none focus:ring-2 focus:ring-accent-green focus:ring-offset-2 focus:ring-offset-background',
-          (!isFormValid || isLoading || disabled) && 'opacity-50 cursor-not-allowed',
-          isFormValid && !isLoading && !disabled && 'hover:opacity-90 hover:shadow-xl hover:shadow-accent-green/30 hover:scale-[1.02]'
+          (!isFormValid || isLoading || disabled) && 'opacity-50 cursor-not-allowed'
         )}
         aria-busy={isLoading}
       >
         {isLoading ? 'Generating...' : 'Generate Excuses'}
-      </button>
+      </motion.button>
     </form>
   );
 }

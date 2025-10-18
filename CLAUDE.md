@@ -190,3 +190,265 @@ notmyfault/
 - Port 3001 for API (may need to kill stale processes if EADDRINUSE error)
 - Vite auto-selects available port (usually 5173+)
 - Both servers MUST run together for full functionality
+
+---
+
+## Agent Workflow Strategy
+
+### Available Specialized Agents
+
+Claude Code has access to specialized agents that should be used for specific types of tasks. **Always delegate to the appropriate agent rather than handling complex tasks directly.**
+
+#### 1. **Explore Agent**
+**When to use:** Codebase exploration, understanding project structure, finding files/patterns
+**Capabilities:** Fast file pattern matching, code search, reading files
+**Use cases:**
+- "Where is X feature implemented?"
+- "How does Y work in this codebase?"
+- "What's the project structure?"
+- "Find all files related to Z"
+- Any open-ended codebase exploration
+
+**Example triggers:**
+- User asks "where..." or "how does..."
+- Need to understand code before making changes
+- Searching for patterns across multiple files
+
+#### 2. **frontend-architect Agent**
+**When to use:** React components, UI architecture, TypeScript frontend work
+**Capabilities:** Full toolkit for building/modifying/reviewing React components
+**Use cases:**
+- Building new React components
+- Modifying existing components
+- Reviewing component architecture
+- TypeScript type issues in frontend
+- Vite configuration
+- State management patterns
+
+**Example triggers:**
+- "Create a new component for..."
+- "Fix the React component..."
+- "Review my component code"
+- "Add TypeScript types for..."
+
+#### 3. **backend-serverless-expert Agent**
+**When to use:** Serverless functions, API routes, backend logic, API integrations
+**Capabilities:** Full toolkit for serverless function development
+**Use cases:**
+- Creating/modifying `/api` directory functions
+- API key handling and security
+- External API integrations (Claude, Gemini)
+- Server-side validation
+- Backend error handling
+
+**Example triggers:**
+- "Create an API endpoint for..."
+- "Fix the serverless function..."
+- "Integrate X API..."
+- "Move this to the backend..."
+- Any work in `/api` directory
+
+**IMPORTANT:** This agent should ALWAYS be consulted when:
+- Adding new API endpoints
+- Modifying existing serverless functions
+- Integrating external APIs
+- Handling sensitive data or API keys
+
+#### 4. **styling-animation-specialist Agent**
+**When to use:** CSS, Tailwind, animations, visual design, UI styling
+**Capabilities:** Full toolkit for styling and animations
+**Use cases:**
+- Tailwind CSS configuration
+- Custom theme modifications
+- Framer Motion animations
+- Responsive design
+- Visual polish and UI improvements
+- CSS debugging
+
+**Example triggers:**
+- "Style this component..."
+- "Add animation to..."
+- "Make it responsive..."
+- "Fix the Tailwind config..."
+- "The design looks off..."
+
+**IMPORTANT for this project:**
+- Tailwind v4 uses `@theme` in CSS, not config file
+- Custom theme in `src/index.css`
+- Dark theme with neon accents (green, blue, purple)
+
+#### 5. **security-guardian Agent**
+**When to use:** Security audits, API key handling, input validation
+**Capabilities:** Read-only analysis + web research for security best practices
+**Use cases:**
+- Audit API integrations
+- Review serverless functions for security issues
+- Check environment variable handling
+- Validate input sanitization
+- Review authentication/authorization
+
+**Example triggers:**
+- After implementing new API endpoints
+- After adding environment variables
+- Before deploying to production
+- When handling user input or file uploads
+
+**IMPORTANT:** Use proactively after any backend/API changes
+
+#### 6. **playwright-tester Agent**
+**When to use:** End-to-end testing, UI testing, integration tests
+**Capabilities:** Playwright tools for browser automation and testing
+**Use cases:**
+- Creating E2E tests for new features
+- Testing form submissions
+- Testing API integrations through UI
+- Validating user flows
+- Regression testing
+
+**Example triggers:**
+- "Test the excuse generation flow"
+- "Create tests for..."
+- "Verify the form works..."
+- After completing features that need validation
+
+#### 7. **devops-deployment-specialist Agent**
+**When to use:** Deployment, CI/CD, Vercel configuration, GitHub operations
+**Capabilities:** GitHub tools, bash, deployment automation
+**Use cases:**
+- Deploying to Vercel
+- Setting up environment variables in Vercel
+- GitHub repository management
+- CI/CD pipeline setup
+- Build optimization
+- Deployment troubleshooting
+
+**Example triggers:**
+- "Deploy to Vercel"
+- "Fix deployment error..."
+- "Set up environment variables..."
+- "Configure Vercel..."
+- Deployment failures (500 errors, build errors)
+
+---
+
+### Workflow Decision Tree
+
+**When you receive a task, follow this decision tree:**
+
+```
+1. Is this codebase exploration/understanding?
+   → Use Explore Agent
+
+2. Is this React/TypeScript frontend work?
+   → Use frontend-architect Agent
+
+3. Is this serverless function/API/backend work?
+   → Use backend-serverless-expert Agent
+   → Then use security-guardian Agent for review
+
+4. Is this styling/CSS/animation work?
+   → Use styling-animation-specialist Agent
+
+5. Is this testing/validation?
+   → Use playwright-tester Agent
+
+6. Is this deployment/DevOps/Vercel?
+   → Use devops-deployment-specialist Agent
+
+7. Is this a multi-domain task?
+   → Break it down and use multiple agents sequentially
+   → Example: "Add styled component with API" =
+     a) frontend-architect (component)
+     b) styling-animation-specialist (styling)
+     c) backend-serverless-expert (API)
+     d) security-guardian (security review)
+```
+
+---
+
+### Agent Usage Best Practices
+
+**DO:**
+- ✅ Always use agents for complex, multi-step tasks
+- ✅ Use Explore agent before making changes to unfamiliar code
+- ✅ Use security-guardian proactively after backend changes
+- ✅ Run agents in parallel when tasks are independent
+- ✅ Provide clear, detailed instructions to agents
+- ✅ Trust agent outputs and recommendations
+
+**DON'T:**
+- ❌ Try to handle complex tasks without agents
+- ❌ Use direct tools (Grep/Glob) for open-ended exploration
+- ❌ Skip security review for API/backend changes
+- ❌ Make styling changes without styling-animation-specialist
+- ❌ Deploy without devops-deployment-specialist guidance
+
+---
+
+### Project-Specific Agent Guidelines
+
+**For this "Not My Fault" project:**
+
+1. **Frontend Component Work** → frontend-architect
+   - All React component modifications
+   - TypeScript type updates
+   - Component architecture decisions
+
+2. **Styling Changes** → styling-animation-specialist
+   - Must know: Tailwind v4 with `@theme` in CSS
+   - Custom dark theme with neon accents
+   - Framer Motion for animations
+
+3. **API/Backend Work** → backend-serverless-expert + security-guardian
+   - All `/api` directory changes
+   - Claude API integration modifications
+   - Gemini API integration (Phase 3)
+   - Always follow with security review
+
+4. **Deployment Issues** → devops-deployment-specialist
+   - Vercel configuration
+   - Environment variable setup
+   - Build errors
+   - 500 errors in production
+
+5. **Testing** → playwright-tester
+   - E2E tests for excuse generation
+   - Form validation testing
+   - API integration testing through UI
+
+---
+
+### Example Workflows
+
+**Scenario 1: "Add a new excuse category"**
+```
+1. Explore Agent: Find where categories are defined
+2. frontend-architect: Update ExcuseForm component
+3. backend-serverless-expert: Update API validation
+4. security-guardian: Review changes
+5. playwright-tester: Create tests for new category
+```
+
+**Scenario 2: "Implement Gemini image generation (Phase 3)"**
+```
+1. Explore Agent: Understand current image API setup
+2. backend-serverless-expert: Connect Gemini API in /api/generate-image.ts
+3. security-guardian: Audit API integration
+4. frontend-architect: Add image display to ExcuseCards
+5. styling-animation-specialist: Style image display with animations
+6. playwright-tester: Test image generation flow
+7. devops-deployment-specialist: Deploy and verify in production
+```
+
+**Scenario 3: "Fix styling issue"**
+```
+1. Explore Agent: Find related styling code (if unclear)
+2. styling-animation-specialist: Fix the styling issue
+3. playwright-tester: Verify fix across different viewports (optional)
+```
+
+**Scenario 4: "Deployment failing with 500 error"**
+```
+1. devops-deployment-specialist: Diagnose and fix deployment
+   (Usually environment variables or build configuration)
+```

@@ -16,16 +16,19 @@ const accentColorClasses = {
     border: 'border-accent-blue',
     glow: 'shadow-lg shadow-accent-blue/20',
     badge: 'bg-accent-blue/20 text-accent-blue',
+    hoverShadow: '0 12px 40px rgba(0, 217, 255, 0.3)',
   },
   purple: {
     border: 'border-accent-purple',
     glow: 'shadow-lg shadow-accent-purple/20',
     badge: 'bg-accent-purple/20 text-accent-purple',
+    hoverShadow: '0 12px 40px rgba(181, 123, 255, 0.3)',
   },
   green: {
     border: 'border-accent-green',
     glow: 'shadow-lg shadow-accent-green/20',
     badge: 'bg-accent-green/20 text-accent-green',
+    hoverShadow: '0 12px 40px rgba(0, 255, 136, 0.3)',
   },
 };
 
@@ -51,6 +54,10 @@ export default function ExcuseCard({ title, text, accentColor, index }: ExcuseCa
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
+      whileHover={{
+        y: -4,
+        boxShadow: colorClasses.hoverShadow,
+      }}
       transition={{
         duration: 0.4,
         delay: index * CARD_STAGGER_DELAY,

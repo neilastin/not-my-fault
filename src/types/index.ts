@@ -3,7 +3,6 @@ export interface AppState {
   // Form inputs
   scenario: string;
   audience: string;
-  importance: string;
 
   // Loading states
   isGeneratingExcuses: boolean;
@@ -50,17 +49,10 @@ export type AudienceOption =
   | 'A police officer'
   | 'Anyone and Everyone';
 
-export type ImportanceOption =
-  | 'Not a massive deal'
-  | 'Somewhat important'
-  | 'Really important'
-  | 'Absolutely critical';
-
 // API request types
 export interface GenerateExcusesRequest {
   scenario: string;
   audience: AudienceOption;
-  importance: ImportanceOption;
 }
 
 export interface GenerateImageRequest {

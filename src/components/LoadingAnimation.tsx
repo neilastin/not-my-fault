@@ -32,7 +32,14 @@ export default function LoadingAnimation({ isLoading }: LoadingAnimationProps) {
   }
 
   return (
-    <div className="py-12 text-center">
+    <div className="flex flex-col items-center justify-center py-12">
+      {/* Animated spinner with glow effect */}
+      <div className="relative">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-accent-green border-t-transparent" />
+        <div className="absolute inset-0 animate-spin rounded-full h-16 w-16 border-4 border-accent-green border-t-transparent blur-md opacity-50" />
+      </div>
+
+      {/* Rotating messages with better styling */}
       <AnimatePresence mode="wait">
         <motion.p
           key={messageIndex}
@@ -40,7 +47,7 @@ export default function LoadingAnimation({ isLoading }: LoadingAnimationProps) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.3 }}
-          className="text-accent-purple text-lg font-medium"
+          className="mt-6 text-text-secondary text-lg text-center max-w-md font-medium"
         >
           {LOADING_MESSAGES[messageIndex]}
         </motion.p>

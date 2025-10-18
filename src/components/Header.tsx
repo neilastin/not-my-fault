@@ -1,32 +1,31 @@
-import { Triangle } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Sparkles } from 'lucide-react';
 
-interface HeaderProps {
-  onScrollToForm?: () => void;
-}
-
-export default function Header({ onScrollToForm }: HeaderProps) {
+export default function Header() {
   return (
-    <header className="fixed top-0 w-full z-50 bg-background-card/95 backdrop-blur-sm border-b border-background-input">
-      <div className="max-w-container mx-auto px-mobile md:px-desktop py-4">
-        <div className="flex items-center justify-between">
-          {/* Logo and Title */}
-          <div className="flex items-center gap-3">
-            <Triangle className="h-6 w-6 text-accent-purple fill-accent-purple" />
-            <h1 className="text-2xl font-bold text-text-primary">
-              Not My Fault
-            </h1>
-          </div>
+    <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-white/5">
+      <div className="max-w-container mx-auto px-mobile md:px-desktop py-3">
+        <div className="flex flex-col items-center justify-center gap-3">
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight">
+            <span className="text-white">Not My</span>
+            <span className="ml-2 bg-gradient-to-r from-accent-green to-accent-blue bg-clip-text text-transparent">
+              Fault
+            </span>
+          </h1>
 
-          {/* Navigation */}
-          <nav>
-            <button
-              onClick={onScrollToForm}
-              className="text-accent-green hover:text-accent-green/80 transition-colors font-medium"
-              aria-label="Navigate to excuse generator form"
-            >
-              Generate Excuses
-            </button>
-          </nav>
+          {/* AI Badge moved from Hero */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-accent-green/10 to-accent-blue/10 border border-accent-green/20">
+              <Sparkles className="w-4 h-4 text-accent-green" />
+              <span className="text-sm font-medium text-accent-green">
+                AI-Powered Excuse Generation
+              </span>
+            </div>
+          </motion.div>
         </div>
       </div>
     </header>

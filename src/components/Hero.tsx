@@ -1,20 +1,40 @@
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import type { TaglineVariation } from '@/lib/taglineVariations';
 
 interface HeroProps {
+  variation: TaglineVariation;
   className?: string;
 }
 
-export default function Hero({ className }: HeroProps) {
+export default function Hero({ variation, className }: HeroProps) {
   return (
-    <section className={cn('py-16 md:py-24 text-center', className)}>
+    <section className={cn('py-6 md:py-8 text-center', className)}>
       <div className="max-w-container mx-auto px-mobile md:px-desktop">
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-text-primary mb-6">
-          Craft the Perfect Excuse
-        </h1>
-        <p className="text-lg md:text-xl text-text-secondary max-w-3xl mx-auto">
-          Generate believable excuses tailored to your situation. Simply input
-          the details, and let us handle the rest.
-        </p>
+        <div className="max-w-5xl mx-auto space-y-4">
+          {/* Main Tagline with Gradient Effects */}
+          <div className="space-y-4">
+            <motion.h2
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tight"
+            >
+              <span className="text-white">{variation.tagline.line1}</span>
+            </motion.h2>
+
+            <motion.h2
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tight"
+            >
+              <span className="bg-gradient-to-r from-accent-green via-accent-blue to-accent-purple bg-clip-text text-transparent">
+                {variation.tagline.line2}
+              </span>
+            </motion.h2>
+          </div>
+        </div>
       </div>
     </section>
   );

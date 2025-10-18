@@ -1,5 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { ExcusesResponse } from '@/types';
+import { getRandomVariation, type TaglineVariation } from '@/lib/taglineVariations';
+import AnimatedBackground from '@/components/AnimatedBackground';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import ExcuseForm from '@/components/ExcuseForm';
@@ -8,6 +10,9 @@ import ExcuseCards from '@/components/ExcuseCards';
 import ErrorMessage from '@/components/ErrorMessage';
 
 function App() {
+  // Tagline variation (selected on mount)
+  const [variation, setVariation] = useState<TaglineVariation>(() => getRandomVariation());
+
   // Loading states
   const [isGeneratingExcuses, setIsGeneratingExcuses] = useState(false);
 
@@ -21,11 +26,12 @@ function App() {
   // Ref for scroll target
   const formRef = useRef<HTMLDivElement>(null);
 
-  const scrollToForm = () => {
-    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
+  // Select random variation on mount
+  useEffect(() => {
+    setVariation(getRandomVariation());
+  }, []);
 
-  const generateExcuses = async (data: { scenario: string; audience: string; importance: string }) => {
+  const generateExcuses = async (data: { scenario: string; audience: string }) => {
     try {
       setIsGeneratingExcuses(true);
       setError(null);
@@ -59,13 +65,15 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header onScrollToForm={scrollToForm} />
+      <AnimatedBackground />
+      <Header />
 
-      <main className="pt-20">
-        <Hero />
+      <main className="pt-28">
+        <Hero variation={variation} />
 
-        <div ref={formRef} className="max-w-form mx-auto px-mobile md:px-desktop py-12">
+        <div ref={formRef} className="max-w-form mx-auto px-mobile md:px-desktop">
           <ExcuseForm
+            variation={variation}
             onSubmit={generateExcuses}
             isLoading={isGeneratingExcuses}
           />

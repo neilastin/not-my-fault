@@ -10,7 +10,6 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 interface RequestBody {
   scenario: string;
   audience: string;
-  importance: string;
 }
 
 interface ExcuseItem {
@@ -36,12 +35,12 @@ export default async function handler(
   }
 
   try {
-    const { scenario, audience, importance } = req.body as RequestBody;
+    const { scenario, audience } = req.body as RequestBody;
 
     // Validate required inputs
-    if (!scenario || !audience || !importance) {
+    if (!scenario || !audience) {
       return res.status(400).json({
-        error: 'Missing required fields. Please provide scenario, audience, and importance.'
+        error: 'Missing required fields. Please provide scenario and audience.'
       });
     }
 
@@ -55,12 +54,6 @@ export default async function handler(
     if (typeof audience !== 'string' || audience.trim().length === 0) {
       return res.status(400).json({
         error: 'Audience must be a non-empty string.'
-      });
-    }
-
-    if (typeof importance !== 'string' || importance.trim().length === 0) {
-      return res.status(400).json({
-        error: 'Importance must be a non-empty string.'
       });
     }
 
@@ -82,9 +75,10 @@ export default async function handler(
     // Build the Claude prompt
     const prompt = `You are an expert excuse generator creating humorous excuses for comedy purposes. Generate THREE distinct excuses for the following scenario, each with a different tone and style.
 
+IMPORTANT: Use BRITISH ENGLISH spelling and phrasing throughout (e.g., "realise" not "realize", "colour" not "color", "whilst" not "while", etc.).
+
 SCENARIO: ${scenario}
 AUDIENCE: ${audience}
-IMPORTANCE: ${importance}
 
 Generate exactly THREE excuses with the following characteristics:
 
@@ -112,8 +106,8 @@ EXCUSE 3 - THE OUTRAGEOUS EXCUSE:
 IMPORTANT INSTRUCTIONS:
 1. Each excuse must be DISTINCTLY DIFFERENT in tone and content
 2. All excuses should be humorous but appropriate for ${audience}
-3. Adjust formality/absurdity based on ${importance}
-4. Titles must be SHORT and punchy (never more than 6 words)
+3. Titles must be SHORT and punchy (never more than 6 words)
+4. Use BRITISH ENGLISH spelling and phrasing throughout all excuses
 5. Return ONLY valid JSON, no other text
 
 Return your response as a JSON object with this EXACT structure:
