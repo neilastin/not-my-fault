@@ -101,72 +101,55 @@ export default async function handler(
       });
     }
 
-    // Build Gemini prompt
+    // Build Gemini 2.5 Flash Image prompt
     let prompt: string;
-    const parts: any[] = [];
 
     if (headshotBase64) {
       // With headshot - composite the person into the scene
-      prompt = `I'm providing you with a headshot photo of a person. Create a photorealistic 16:9 image that places THIS SPECIFIC PERSON into the following humorous excuse scenario:
+      prompt = `Take this person and place them in a humorous scenario: ${excuseText}. Ensure the person's face and features remain completely unchanged. Create a realistic, full-body shot with appropriate lighting and natural shadows. The image should look like photographic evidence of this excuse actually happening. Make it absurd and funny while maintaining photorealism.`;
+    } else {
+      // Without headshot - generate generic scenario
+      prompt = `Create a humorous, photorealistic image depicting this scenario: ${excuseText}. The image should look like photographic evidence of this excuse actually happening, with realistic lighting and details. Make it absurd and funny while maintaining photorealistic quality.`;
+    }
 
-EXCUSE: ${excuseText}
+    // Call Gemini 2.5 Flash Image API for image generation
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for image generation
 
-CRITICAL REQUIREMENTS:
-1. PERSON CONTINUITY: The person in the generated image MUST look exactly like the person in the provided headshot. Maintain their facial features, hair, skin tone, and general appearance. This is absolutely critical.
-2. Scene Integration: Place this person naturally into the absurd scenario described in the excuse
-3. Photorealistic Style: The image should look like a real photograph, not a cartoon or illustration
-4. Aspect Ratio: 16:9 (landscape orientation)
-5. Humor: The scenario should be visually funny and absurd, making the excuse obviously ridiculous
-6. Quality: High-quality, well-lit, professionally composed shot
+    try {
+      // Build the request parts array
+      const requestParts: any[] = [];
 
-Make sure the person from the headshot is clearly the main subject in the scenario. The image should make viewers laugh at how ridiculous the situation is while featuring the actual person from the uploaded photo.`;
-
-      parts.push(
-        { text: prompt },
-        {
+      // Add headshot as inline_data if provided (must come before text prompt)
+      if (headshotBase64 && headshotMimeType) {
+        requestParts.push({
           inline_data: {
             mime_type: headshotMimeType,
             data: headshotBase64
           }
-        }
-      );
-    } else {
-      // Without headshot - generate generic scenario
-      prompt = `Create a photorealistic 16:9 image that humorously depicts the following excuse scenario:
+        });
+      }
 
-EXCUSE: ${excuseText}
+      // Add the text prompt
+      requestParts.push({ text: prompt });
 
-REQUIREMENTS:
-- Style: Photorealistic, high-quality, cinematic
-- Aspect Ratio: 16:9 (landscape)
-- Tone: Funny, absurd, visually captures the ridiculousness of the excuse
-- Scene: Show the scenario in action, with visual elements that match the excuse narrative
-- Details: Rich environmental details that support the story
-- Lighting: Dramatic, professional photography lighting
-- Composition: Well-framed, visually interesting
-
-Make this image obviously absurd and humorous while maintaining photorealistic quality. The image should make someone laugh when they see it because of how ridiculous the scenario is.`;
-
-      parts.push({ text: prompt });
-    }
-
-    // Call Gemini API with timeout (API key is secure on server)
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
-
-    try {
+      // Gemini 2.5 Flash Image API endpoint
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${process.env.GEMINI_API_KEY}`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            contents: [{ parts }],
+            contents: [{
+              parts: requestParts
+            }],
             generationConfig: {
-              temperature: 0.9,
-              maxOutputTokens: 2048,
+              responseModalities: ["Image"],
+              imageConfig: {
+                aspectRatio: "16:9"
+              }
             }
           }),
           signal: controller.signal
@@ -190,7 +173,7 @@ Make this image obviously absurd and humorous while maintaining photorealistic q
 
       const data = await response.json();
 
-      // Extract generated image
+      // Extract generated image from Gemini 2.5 Flash Image response
       if (!data.candidates || data.candidates.length === 0) {
         console.error('No candidates in Gemini response:', data);
         clearTimeout(timeoutId);
@@ -199,18 +182,29 @@ Make this image obviously absurd and humorous while maintaining photorealistic q
         });
       }
 
-      const generatedContent = data.candidates[0].content.parts[0];
+      const candidate = data.candidates[0];
+      const parts = candidate?.content?.parts;
 
-      if (!generatedContent.inline_data) {
-        console.error('No image data in response:', generatedContent);
+      if (!parts || parts.length === 0) {
+        console.error('No parts in Gemini response:', candidate);
+        clearTimeout(timeoutId);
+        return res.status(500).json({
+          error: 'Failed to generate image. Please try again.'
+        });
+      }
+
+      const inlineData = parts[0]?.inlineData;
+
+      if (!inlineData || !inlineData.data) {
+        console.error('No image data in Gemini response:', parts[0]);
         clearTimeout(timeoutId);
         return res.status(500).json({
           error: 'Failed to generate image. The model may not support image generation.'
         });
       }
 
-      const imageBase64 = generatedContent.inline_data.data;
-      const mimeType = generatedContent.inline_data.mime_type;
+      const imageBase64 = inlineData.data;
+      const mimeType = inlineData.mimeType || 'image/png'; // Default to PNG if not specified
 
       // Return image to browser as data URL
       const imageResponse: ImageResponse = {
@@ -225,7 +219,7 @@ Make this image obviously absurd and humorous while maintaining photorealistic q
 
       // Handle timeout specifically
       if (fetchError.name === 'AbortError') {
-        console.error('Gemini API timeout after 45s');
+        console.error('Gemini 2.5 Flash Image API timeout after 60s');
         return res.status(504).json({
           error: 'Request timed out. Please try again.'
         });

@@ -8,11 +8,12 @@ import { cn } from '@/lib/utils';
 interface ExcuseCardsProps {
   excuses: ExcusesResponse | null;
   isVisible: boolean;
+  onTabChange?: (excuseType: 'excuse1' | 'excuse2' | 'excuse3') => void;
 }
 
 type ExcuseType = 'technical' | 'believable' | 'outrageous';
 
-export default function ExcuseCards({ excuses, isVisible }: ExcuseCardsProps) {
+export default function ExcuseCards({ excuses, isVisible, onTabChange }: ExcuseCardsProps) {
   const [activeTab, setActiveTab] = useState<ExcuseType>('believable');
 
   // Generate random titles once when excuses are loaded
@@ -41,6 +42,19 @@ export default function ExcuseCards({ excuses, isVisible }: ExcuseCardsProps) {
     };
   }, [excuses]);
 
+  const handleTabChange = (excuseType: ExcuseType) => {
+    setActiveTab(excuseType);
+
+    // Map UI tab type to API excuse type and notify parent
+    const excuseTypeMap: Record<ExcuseType, 'excuse1' | 'excuse2' | 'excuse3'> = {
+      technical: 'excuse1',
+      believable: 'excuse2',
+      outrageous: 'excuse3',
+    };
+
+    onTabChange?.(excuseTypeMap[excuseType]);
+  };
+
   if (!isVisible || !excuseData) {
     return null;
   }
@@ -68,7 +82,7 @@ export default function ExcuseCards({ excuses, isVisible }: ExcuseCardsProps) {
           return (
             <button
               key={type}
-              onClick={() => setActiveTab(type)}
+              onClick={() => handleTabChange(type)}
               className={cn(
                 'relative flex-1 px-6 py-3 rounded-lg font-semibold transition-all duration-300',
                 'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background',

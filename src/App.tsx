@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import type { ExcusesResponse } from '@/types';
+import type { ExcusesResponse, GenerateImageResponse } from '@/types';
 import { getRandomVariation, type TaglineVariation } from '@/lib/taglineVariations';
 import AnimatedBackground from '@/components/AnimatedBackground';
 import Header from '@/components/Header';
@@ -8,6 +8,7 @@ import ExcuseForm from '@/components/ExcuseForm';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import ExcuseCards from '@/components/ExcuseCards';
 import ErrorMessage from '@/components/ErrorMessage';
+import PhotoEvidence from '@/components/PhotoEvidence';
 
 function App() {
   // Tagline variation (selected on mount)
@@ -15,13 +16,24 @@ function App() {
 
   // Loading states
   const [isGeneratingExcuses, setIsGeneratingExcuses] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   // Generated content
   const [excuses, setExcuses] = useState<ExcusesResponse | null>(null);
+  const [imagesByExcuse, setImagesByExcuse] = useState<
+    Record<'excuse1' | 'excuse2' | 'excuse3', string | null>
+  >({
+    excuse1: null,
+    excuse2: null,
+    excuse3: null,
+  });
 
   // UI state
   const [showExcuses, setShowExcuses] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedExcuseTab, setSelectedExcuseTab] = useState<'excuse1' | 'excuse2' | 'excuse3'>(
+    'excuse2'
+  ); // Default to 'believable' which maps to excuse2
 
   // Ref for scroll target
   const formRef = useRef<HTMLDivElement>(null);
@@ -51,6 +63,13 @@ function App() {
       const excusesData: ExcusesResponse = await response.json();
       setExcuses(excusesData);
       setShowExcuses(true);
+
+      // Reset images when new excuses are generated
+      setImagesByExcuse({
+        excuse1: null,
+        excuse2: null,
+        excuse3: null,
+      });
     } catch (err) {
       console.error('Error generating excuses:', err);
       setError(
@@ -61,6 +80,47 @@ function App() {
     } finally {
       setIsGeneratingExcuses(false);
     }
+  };
+
+  const generateImage = async (
+    excuseType: 'excuse1' | 'excuse2' | 'excuse3',
+    headshotBase64?: string,
+    headshotMimeType?: 'image/jpeg' | 'image/png'
+  ) => {
+    if (!excuses) return;
+
+    setIsGeneratingImage(true);
+    setError(null);
+
+    try {
+      const excuse = excuses[excuseType];
+      const response = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          excuseText: excuse.text,
+          headshotBase64,
+          headshotMimeType,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate image');
+      }
+
+      const data: GenerateImageResponse = await response.json();
+      setImagesByExcuse((prev) => ({ ...prev, [excuseType]: data.imageUrl }));
+    } catch (err) {
+      console.error('Error generating image:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate image');
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
+  const handleTabChange = (excuseType: 'excuse1' | 'excuse2' | 'excuse3') => {
+    setSelectedExcuseTab(excuseType);
   };
 
   return (
@@ -83,7 +143,30 @@ function App() {
           {error && <ErrorMessage message={error} />}
 
           {showExcuses && excuses && (
-            <ExcuseCards excuses={excuses} isVisible={showExcuses} />
+            <>
+              <ExcuseCards
+                excuses={excuses}
+                isVisible={showExcuses}
+                onTabChange={handleTabChange}
+              />
+
+              <PhotoEvidence
+                excuseText={excuses[selectedExcuseTab].text}
+                excuseType={selectedExcuseTab}
+                accentColor={
+                  selectedExcuseTab === 'excuse1'
+                    ? 'blue'
+                    : selectedExcuseTab === 'excuse2'
+                    ? 'purple'
+                    : 'green'
+                }
+                isGenerating={isGeneratingImage}
+                generatedImage={imagesByExcuse[selectedExcuseTab]}
+                onGenerate={(headshotBase64, headshotMimeType) =>
+                  generateImage(selectedExcuseTab, headshotBase64, headshotMimeType)
+                }
+              />
+            </>
           )}
         </div>
       </main>
