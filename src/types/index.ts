@@ -47,7 +47,7 @@ export type AudienceOption =
   | 'A client'
   | 'A coworker'
   | 'A police officer'
-  | 'Anyone and Everyone';
+  | 'Anyone and everyone';
 
 // API request types
 export interface GenerateExcusesRequest {
