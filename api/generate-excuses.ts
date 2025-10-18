@@ -143,7 +143,6 @@ DO NOT include any text outside the JSON object. DO NOT use markdown code blocks
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 2000,
-          temperature: 1.0, // Maximum temperature for most creative, varied responses
           messages: [
             {
               role: 'user',
