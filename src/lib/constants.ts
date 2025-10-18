@@ -12,7 +12,7 @@ export const AUDIENCE_OPTIONS: AudienceOption[] = [
   'A client',
   'A coworker',
   'A police officer',
-  'Anyone and Everyone',
+  'Anyone and everyone',
 ];
 
 // Loading messages (55 messages from spec)

@@ -106,10 +106,10 @@ export default async function handler(
 
     if (headshotBase64) {
       // With headshot - composite the person into the scene
-      prompt = `Take this person and place them in a humorous scenario: ${excuseText}. Ensure the person's face and features remain completely unchanged. Create a realistic, full-body shot with appropriate lighting and natural shadows. The image should look like photographic evidence of this excuse actually happening. Make it absurd and funny while maintaining photorealism.`;
+      prompt = `Take this person (or people) and place them in an extremely hilarious scenario depicting this excuse: ${excuseText}. They've done something wrong but are pretending it's not their fault—this is their absurd excuse, and you're creating the photographic evidence. Keep their faces 100% recognizable (same person/people), but feel free to adjust expressions and angles. Extend to full-body shots if needed with realistic lighting and natural shadows. Make it photorealistic, absurd, and funny.`;
     } else {
       // Without headshot - generate generic scenario
-      prompt = `Create a humorous, photorealistic image depicting this scenario: ${excuseText}. The image should look like photographic evidence of this excuse actually happening, with realistic lighting and details. Make it absurd and funny while maintaining photorealistic quality.`;
+      prompt = `Create photorealistic evidence of this excuse: ${excuseText}. Show the aftermath, the scene, or the situation itself—but do NOT show the person making the excuse (we don't know what they look like). Focus on environmental details, objects, or consequences that prove this absurd scenario happened. Other people can appear if relevant to the excuse, but not the main subject. Make it look like photographic evidence with realistic lighting and details. Keep it absurd and funny while maintaining photorealism.`;
     }
 
     // Call Gemini 2.5 Flash Image API for image generation

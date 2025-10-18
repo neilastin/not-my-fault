@@ -1,6 +1,6 @@
-import { useState, type FormEvent, type ChangeEvent } from 'react';
-import { motion } from 'framer-motion';
-import { AUDIENCE_OPTIONS } from '@/lib/constants';
+import { useState, useEffect, type FormEvent, type ChangeEvent } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { AUDIENCE_OPTIONS, LOADING_MESSAGES, LOADING_MESSAGE_INTERVAL } from '@/lib/constants';
 import type { TaglineVariation } from '@/lib/taglineVariations';
 import { cn } from '@/lib/utils';
 
@@ -20,6 +20,25 @@ export default function ExcuseForm({ variation, onSubmit, isLoading, disabled = 
   const [scenario, setScenario] = useState('');
   const [audience, setAudience] = useState('');
   const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [messageIndex, setMessageIndex] = useState(0);
+
+  useEffect(() => {
+    if (!isLoading) {
+      return;
+    }
+
+    // Reset to first message when loading starts
+    setMessageIndex(0);
+
+    const interval = setInterval(() => {
+      setMessageIndex((prevIndex) => (prevIndex + 1) % LOADING_MESSAGES.length);
+    }, LOADING_MESSAGE_INTERVAL);
+
+    // Cleanup interval on unmount or when loading stops
+    return () => {
+      clearInterval(interval);
+    };
+  }, [isLoading]);
 
   const validateForm = (): boolean => {
     const errors: FormErrors = {};
@@ -160,11 +179,36 @@ export default function ExcuseForm({ variation, onSubmit, isLoading, disabled = 
           'bg-accent-green text-background',
           'shadow-lg shadow-accent-green/20',
           'focus:outline-none focus:ring-2 focus:ring-accent-green focus:ring-offset-2 focus:ring-offset-background',
-          (!isFormValid || isLoading || disabled) && 'opacity-50 cursor-not-allowed'
+          (!isFormValid || isLoading || disabled) && 'opacity-50 cursor-not-allowed',
+          'h-[64px] flex items-center justify-center'
         )}
         aria-busy={isLoading}
       >
-        {isLoading ? 'Generating...' : 'Generate Excuses'}
+        {isLoading ? (
+          <div className="flex items-center gap-3">
+            {/* Spinner on left */}
+            <div className="relative flex-shrink-0">
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-background border-t-transparent" />
+              <div className="absolute inset-0 animate-spin rounded-full h-6 w-6 border-2 border-background border-t-transparent blur-sm opacity-50" />
+            </div>
+
+            {/* Rotating messages on right */}
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={messageIndex}
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.3 }}
+                className="text-sm font-medium"
+              >
+                {LOADING_MESSAGES[messageIndex]}
+              </motion.span>
+            </AnimatePresence>
+          </div>
+        ) : (
+          'Generate Excuses'
+        )}
       </motion.button>
     </form>
   );

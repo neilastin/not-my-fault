@@ -5,7 +5,6 @@ import AnimatedBackground from '@/components/AnimatedBackground';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import ExcuseForm from '@/components/ExcuseForm';
-import LoadingAnimation from '@/components/LoadingAnimation';
 import ExcuseCards from '@/components/ExcuseCards';
 import ErrorMessage from '@/components/ErrorMessage';
 import PhotoEvidence from '@/components/PhotoEvidence';
@@ -137,8 +136,6 @@ function App() {
             onSubmit={generateExcuses}
             isLoading={isGeneratingExcuses}
           />
-
-          {isGeneratingExcuses && <LoadingAnimation isLoading={true} />}
 
           {error && <ErrorMessage message={error} />}
 
