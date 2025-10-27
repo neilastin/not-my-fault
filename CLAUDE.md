@@ -4,7 +4,60 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Status
 
-**Current Phase: Phase 2 - UI Components & Local Development (COMPLETE)**
+**Current Phase: Phase 3 - Image Generation Integration & UX Polish (COMPLETE)**
+
+### ✅ Phase 3 Completion: Comedic Style System & Image Preview Modal
+
+**Major Accomplishments (2025-10-27):**
+
+#### 1. Excuse Generation Prompt Redesign
+- **Removed:** Wordplay comedic style (didn't work well for excuse context)
+- **Added:** 8 comedic styles with rich descriptive guidance instead of examples
+  - Absurdist (surreal, impossible scenarios)
+  - Observational (modern life observations)
+  - Deadpan (formal tone, absurd content)
+  - Hyperbolic (exaggerated, epic scale)
+  - Self-deprecating (personal incompetence)
+  - Ironic (contradictions, opposite outcomes)
+  - Meta (fourth wall breaking, self-aware)
+  - Paranoid (conspiracy theories, connections)
+- **Implementation:** Random rotation system selects one style per generation
+- **Result:** Excuses are now genuinely funny, varied, and avoid excessive British cultural references
+
+#### 2. Image Generation Style Matching
+- **Visual Styles:** 8 visual styles matching excuse comedic styles
+- **Headshot Variants:** Each style has "withHeadshot" and "withoutHeadshot" instructions
+- **Text Prevention:** Strengthened NO TEXT rules across all visual styles
+- **People Rules:** Explicit guidance preventing generation of known people while allowing strangers
+- **Result:** Images now visually align with excuse humor, creating cohesive user experience
+
+#### 3. Full-Screen Image Preview Modal
+- **New Component:** `ImageModal.tsx` with:
+  - Full-screen dark backdrop (90% opacity)
+  - Centered image scaled to fit viewport
+  - Close button (top-right, ESC key support)
+  - Floating download button (bottom-right, green accent)
+  - Auto-close after 800ms delay post-download
+  - Click-outside-to-close functionality
+  - Download state feedback ("Downloaded! ✓")
+  - Accessibility: ARIA labels, keyboard navigation
+  - Framer Motion animations
+- **Updated UI:** `ImageDisplay.tsx` made clickable with hover effects
+  - Scale up 1.02x on hover
+  - Dark overlay appears (30% opacity)
+  - Maximize icon appears
+  - "Click to view full screen" hint text
+  - Keyboard support (Enter/Space to open)
+- **Result:** Much improved UX for viewing and downloading images
+
+**Verified Working (2025-10-27):**
+- ✅ Excuse generation with randomized comedic styles
+- ✅ Style-specific visual image generation
+- ✅ Full-screen modal with clear download button
+- ✅ Auto-close after download with visual feedback
+- ✅ Responsive design across mobile/tablet/desktop
+- ✅ No unwanted text in generated images
+- ✅ No random people in backgrounds
 
 ### Completed Phases
 
@@ -26,9 +79,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - ErrorMessage (error handling)
 - Tailwind CSS v4 configured correctly with custom theme
 - Custom local development server created (dev-server.js)
-- API integration working with Claude API
+- API integration working with Claude API (2 excuses: believable + risky)
 - Environment variables properly loaded
-- **Excuse generation fully functional locally**
+- **Excuse generation fully functional and verified working**
 
 ## Tech Stack
 
@@ -86,8 +139,8 @@ npm run lint     # Run ESLint
 ```
 notmyfault/
 ├── api/                     # Vercel serverless functions
-│   ├── generate-excuses.ts # Claude API integration (COMPLETE)
-│   └── generate-image.ts   # Gemini image API (NOT YET IMPLEMENTED)
+│   ├── generate-excuses.ts # Claude API with 8 comedic styles (COMPLETE)
+│   └── generate-image.ts   # Gemini 2.5 Flash Image with style matching (COMPLETE)
 ├── public/                  # Static assets
 ├── src/
 │   ├── components/         # React components (ALL COMPLETE)
@@ -96,6 +149,10 @@ notmyfault/
 │   │   ├── ExcuseForm.tsx  # Form for excuse generation
 │   │   ├── ExcuseCards.tsx # Display generated excuses
 │   │   ├── ExcuseCard.tsx  # Individual excuse card
+│   │   ├── PhotoEvidence.tsx    # Image generation & upload
+│   │   ├── ImageDisplay.tsx     # Image display with clickable preview
+│   │   ├── ImageModal.tsx       # Full-screen preview modal
+│   │   ├── HeadshotUpload.tsx   # Drag-and-drop file upload
 │   │   ├── LoadingAnimation.tsx  # Loading state
 │   │   └── ErrorMessage.tsx      # Error display
 │   ├── lib/                # Utility functions
@@ -150,29 +207,39 @@ notmyfault/
 - ✅ Full UI built with all components
 - ✅ Tailwind CSS v4 custom dark theme working
 - ✅ Local development environment with custom API server
-- ✅ Claude API integration for excuse generation (3 excuses per request)
+- ✅ Claude API integration for excuse generation (2 excuses with 8 comedic styles)
+- ✅ Gemini 2.5 Flash Image API for image generation with style matching
+- ✅ Full-screen image preview modal with download functionality
+- ✅ Drag-and-drop headshot upload with file validation
+- ✅ Image caching per excuse type
+- ✅ Tabbed interface with smooth animations
 - ✅ Form validation and error handling
 - ✅ Loading animations and transitions
-- ✅ Responsive design
+- ✅ Responsive design across all breakpoints
+- ✅ Accessibility features (ARIA labels, keyboard navigation)
 
 **Not Yet Implemented:**
-- ❌ Gemini API integration for image generation (`/api/generate-image.ts` exists but not connected)
-- ❌ Image upload/headshot processing
 - ❌ Deployment to Vercel production
+- ❌ E2E tests (Playwright)
+- ❌ Performance monitoring/analytics
 
 **Next Steps:**
-- Phase 3: Image Generation Integration
-  - Connect Gemini API for excuse image generation
-  - Implement image upload for headshot feature
-  - Add image display in ExcuseCards
-- Phase 4: Polish & Testing
-  - Add more animations
-  - Improve mobile responsiveness
-  - Add error handling edge cases
+- Phase 4: Testing & Quality Assurance
+  - Create comprehensive E2E tests with Playwright
+  - Test excuse generation across all 8 styles
+  - Test image generation with/without headshots
+  - Test modal interactions and downloads
+  - Responsive design testing (mobile, tablet, desktop)
 - Phase 5: Deployment to Vercel
   - Configure Vercel project
   - Set up environment variables in Vercel dashboard
   - Deploy and test production build
+  - Monitor for errors
+- Phase 6: Optional Enhancements
+  - Add more comedic styles
+  - Implement history/favorites
+  - Share functionality
+  - Analytics integration
 
 ## Important Technical Notes
 

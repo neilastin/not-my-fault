@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 /**
- * Serverless function to generate 3 creative excuses using Claude API
+ * Serverless function to generate 2 creative excuses using Claude API
  *
  * Security: API key accessed via process.env (server-side only)
  * No VITE_ prefix - keeps keys hidden from browser
@@ -20,7 +20,7 @@ interface ExcuseItem {
 interface ExcusesResponse {
   excuse1: ExcuseItem;
   excuse2: ExcuseItem;
-  excuse3: ExcuseItem;
+  comedicStyle: string; // The style used for excuse2 (Risky excuse)
 }
 
 export default async function handler(
@@ -72,57 +72,162 @@ export default async function handler(
       });
     }
 
-    // Build the Claude prompt
-    const prompt = `You are an expert excuse generator creating humorous excuses for comedy purposes. Generate THREE distinct excuses for the following scenario, each with a different tone and style.
+    // Select random comedic style for the Risky excuse
+    const riskyStyles = [
+      'Absurdist',
+      'Observational',
+      'Deadpan',
+      'Hyperbolic',
+      'Self-deprecating',
+      'Ironic',
+      'Meta',
+      'Paranoid'
+    ];
+    const selectedStyle = riskyStyles[Math.floor(Math.random() * riskyStyles.length)];
 
-IMPORTANT: Use BRITISH ENGLISH spelling and phrasing throughout (e.g., "realise" not "realize", "colour" not "color", "whilst" not "while", etc.).
+    // Debug logging
+    console.log('=== STYLE SELECTION DEBUG ===');
+    console.log('Selected comedic style:', selectedStyle);
+    console.log('============================');
+
+    // Style-specific instructions
+    const styleInstructions: Record<string, string> = {
+      'Absurdist': `Use ABSURDIST comedy:
+- Introduce surreal, impossible scenarios that defy logic and physics
+- Include talking animals, sentient objects, or things that shouldn't exist
+- Make the bizarre feel matter-of-fact (quantum mechanics in daily life, time paradoxes)
+- Layer absurdity upon absurdity - don't settle for one weird thing
+- Examples of absurdist elements: parallel dimensions, objects with personalities, animals doing human jobs, impossible weather
+- Avoid clichés: Don't just say "aliens did it" - be creative and specific`,
+
+      'Observational': `Use OBSERVATIONAL comedy:
+- Point out the ironic, annoying, or contradictory aspects of everyday situations
+- "Have you ever noticed..." style observations about modern life
+- Highlight the absurdity in normal social conventions or technology
+- Make it relatable - focus on universal frustrations everyone experiences
+- Examples: smartphone glitches at crucial moments, autocorrect disasters, social media timing fails
+- Avoid clichés: Find fresh angles on common annoyances, not tired old "traffic sucks" jokes`,
+
+      'Deadpan': `Use DEADPAN comedy:
+- State completely outrageous things in a serious, matter-of-fact tone
+- No exclamation marks, no dramatics - just calm delivery of absurd content
+- Use formal, professional language to describe ridiculous situations
+- The humor comes from the contrast between tone and content
+- Examples: "I was engaged in a minor territorial dispute with a swan" or "A series of cascading failures in my morning routine"
+- Avoid clichés: Don't be boring - make the content wild but the delivery flat`,
+
+      'Hyperbolic': `Use HYPERBOLIC comedy:
+- Blow everything wildly out of proportion
+- Use extreme exaggerations: "worst disaster in human history", "literally impossible"
+- Stack superlatives and extremes: epic, catastrophic, unprecedented
+- Make small problems into world-ending events
+- Examples: missed alarm becomes "apocalyptic chronological failure", traffic becomes "automotive gridlock of biblical proportions"
+- Avoid clichés: Don't just add "super" or "really" - go ridiculously over the top`,
+
+      'Self-deprecating': `Use SELF-DEPRECATING comedy:
+- Make yourself the fool/incompetent one
+- Highlight your own flaws, mistakes, or poor judgment
+- Own the failure completely - you're the problem, not circumstances
+- Be specific about your incompetence (can't read clocks, terrible at technology, etc.)
+- Examples: "I have the spatial awareness of a concussed pigeon" or "My organizational skills peaked in kindergarten"
+- Avoid clichés: Don't just say "I'm bad at things" - be creatively self-critical`,
+
+      'Ironic': `Use IRONIC comedy:
+- Say the opposite of what you mean to highlight contradictions
+- Point out situations where the opposite of what should happen occurs
+- Use dramatic irony - when trying to fix something makes it worse
+- Highlight hypocrisy or contradictory outcomes
+- Examples: "I was trying to be MORE responsible which is exactly why I'm late" or attempting to avoid a problem creates the problem
+- Avoid clichés: Find genuine ironic twists, not just sarcasm`,
+
+      'Wordplay': `Use WORDPLAY comedy:
+- Include puns, double meanings, or linguistic tricks
+- Play with similar-sounding words, homonyms, or phrases
+- Use technical terms in unexpected ways
+- Create humor through clever word choices or unexpected phrases
+- Examples: misheard song lyrics, autocorrect disasters, technical jargon misapplied
+- Avoid clichés: Don't use tired old puns - find fresh wordplay angles`,
+
+      'Meta': `Use META comedy:
+- Break the 4th wall - acknowledge you're making an excuse
+- Reference the fact that this is obviously an excuse
+- Be self-aware about how ridiculous/transparent the excuse is
+- Comment on the excuse-making process itself
+- Examples: "I'm aware this sounds like an excuse, which it absolutely is, but..." or "The beauty of this explanation is that it's technically true while being completely misleading"
+- Avoid clichés: Don't just say "I know this sounds fake" - play with the meta-ness creatively`,
+
+      'Paranoid': `Use PARANOID/CONSPIRACY comedy:
+- Connect unrelated events into elaborate conspiracy theories
+- Everything is suspicious and interconnected
+- Use phrases like "it's no coincidence that...", "they don't want you to know..."
+- Build increasingly complex chains of cause and effect
+- Examples: neighbors are in on it, corporations tracking you, elaborate schemes by mundane organizations
+- Avoid clichés: Don't just say "Illuminati" - create specific, silly conspiracies`
+    };
+
+    // Build the Claude prompt
+    const prompt = `You are an expert excuse generator creating highly varied, genuinely funny excuses for comedy entertainment. Generate TWO distinct excuses for the following scenario.
+
+LANGUAGE: Use British English spelling throughout (realise, colour, favour, whilst, etc.)
 
 SCENARIO: ${scenario}
 AUDIENCE: ${audience}
 
-Generate exactly THREE excuses with the following characteristics:
+Generate TWO excuses - one mundane, one comedic:
 
-EXCUSE 1 - THE OVERLY FORMAL EXCUSE:
-- Tone: Extremely formal, academic, unnecessarily complicated
-- Language: Complex vocabulary, long sentences, technical jargon
-- Comedy: Derives from how ridiculously over-complicated it is
-- Length: 3-4 sentences
-- Title: A short, pompous-sounding title (4-6 words max) like "The Quantum Temporal Displacement Theory" or "An Exercise in Circumstantial Inevitability"
+═══════════════════════════════════════════════════════════
+EXCUSE 1 - THE BELIEVABLE EXCUSE (Mundane & Practical)
+═══════════════════════════════════════════════════════════
 
-EXCUSE 2 - THE BELIEVABLE EXCUSE:
-- Tone: Reasonable, sensible, somewhat mundane
-- Language: Clear, straightforward, relatable
-- Comedy: Derives from how boring and ordinary it is (might be slightly humorous in its mundanity)
-- Length: 2-3 sentences
-- Title: A short, boring title (3-5 words max) like "Traffic Issues" or "Simple Miscommunication"
+This is your BORING excuse. Make it:
+- Completely mundane and realistic
+- Something that actually could have happened
+- Short and to the point (2-5 sentences)
+- An EXCUSE (explain what prevented you), not an apology
+- Title: Short and boring (3-5 words) like "Traffic Delay" or "Phone Battery Died"
 
-EXCUSE 3 - THE OUTRAGEOUS EXCUSE:
-- Tone: Absurd, far-fetched, fantastical, uses extreme hyperbole
-- Language: Dramatic, vivid, storytelling style
-- Comedy: Derives from how ridiculous and unbelievable it is
-- Length: 3-5 sentences
-- Title: A short, dramatic title (4-6 words max) like "The Great Alpaca Incident" or "When Pigeons Attack"
+Examples of good mundane excuses:
+• "My alarm didn't go off"
+• "I got stuck in traffic"
+• "My phone battery died and I didn't see your message"
+• "I had a last-minute family emergency"
 
-IMPORTANT INSTRUCTIONS:
-1. Each excuse must be DISTINCTLY DIFFERENT in tone and content
-2. All excuses should be humorous but appropriate for ${audience}
-3. Titles must be SHORT and punchy (never more than 6 words)
-4. Use BRITISH ENGLISH spelling and phrasing throughout all excuses
-5. Return ONLY valid JSON, no other text
+The humor comes from how BORING and ORDINARY this is compared to excuse 2.
+
+═══════════════════════════════════════════════════════════
+EXCUSE 2 - THE RISKY EXCUSE (${selectedStyle} Comedy Style)
+═══════════════════════════════════════════════════════════
+
+${styleInstructions[selectedStyle]}
+
+REQUIREMENTS:
+- Length: 3-7 sentences (you have room to develop the comedy)
+- Make it FUNNY and highly creative within this comedic style
+- Title: Short and punchy (4-6 words max)
+- Appropriate for ${audience} but push comedic boundaries
+- Be SPECIFIC and VIVID - avoid vague generic humor
+- Find FRESH angles - avoid overused tropes for this style
+
+CREATIVITY GUIDELINES:
+✓ Be surprising and unexpected
+✓ Layer multiple comedic elements
+✓ Use vivid, specific details
+✓ Make it distinctly different from generic "outrageous" excuses
+✗ Don't rely on shock value alone
+✗ Don't use tired clichés
+✗ Don't be vague or generic
+
+Remember: The two excuses should be POLAR OPPOSITES - one boring and realistic, one wildly comedic using ${selectedStyle} style.
 
 Return your response as a JSON object with this EXACT structure:
 {
   "excuse1": {
-    "title": "short formal title here",
-    "text": "the overly formal excuse text here"
+    "title": "short boring title (3-5 words)",
+    "text": "the mundane believable excuse (2-5 sentences)"
   },
   "excuse2": {
-    "title": "short boring title here",
-    "text": "the believable excuse text here"
-  },
-  "excuse3": {
-    "title": "short dramatic title here",
-    "text": "the outrageous excuse text here"
+    "title": "short punchy title (4-6 words)",
+    "text": "the ${selectedStyle} comedy excuse (3-7 sentences)"
   }
 }
 
@@ -191,7 +296,7 @@ DO NOT include any text outside the JSON object. DO NOT use markdown code blocks
       }
 
       // Validate response structure
-      if (!excuses.excuse1 || !excuses.excuse2 || !excuses.excuse3) {
+      if (!excuses.excuse1 || !excuses.excuse2) {
         clearTimeout(timeoutId);
         console.error('Invalid excuse structure');
         return res.status(500).json({
@@ -199,9 +304,12 @@ DO NOT include any text outside the JSON object. DO NOT use markdown code blocks
         });
       }
 
-      // Return excuses to browser
+      // Return excuses to browser with the comedic style
       clearTimeout(timeoutId);
-      return res.status(200).json(excuses);
+      return res.status(200).json({
+        ...excuses,
+        comedicStyle: selectedStyle
+      });
 
     } catch (fetchError: any) {
       clearTimeout(timeoutId);

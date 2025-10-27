@@ -6,8 +6,8 @@ import { cn } from '@/lib/utils';
 
 interface PhotoEvidenceProps {
   excuseText: string;
-  excuseType: 'excuse1' | 'excuse2' | 'excuse3';
-  accentColor: 'blue' | 'purple' | 'green';
+  excuseType: 'excuse1' | 'excuse2';
+  accentColor: 'purple' | 'green';
   isGenerating: boolean;
   generatedImage: string | null;
   onGenerate: (headshotBase64?: string, headshotMimeType?: 'image/jpeg' | 'image/png') => void;
@@ -19,10 +19,9 @@ interface HeadshotData {
   mimeType: 'image/jpeg' | 'image/png';
 }
 
-const excuseTypeLabels: Record<'excuse1' | 'excuse2' | 'excuse3', string> = {
-  excuse1: 'Technical Excuse',
-  excuse2: 'Believable Excuse',
-  excuse3: 'Outrageous Excuse',
+const excuseTypeLabels: Record<'excuse1' | 'excuse2', string> = {
+  excuse1: 'Believable Excuse',
+  excuse2: 'Risky Excuse',
 };
 
 export default function PhotoEvidence({

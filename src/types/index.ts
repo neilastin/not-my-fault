@@ -33,7 +33,7 @@ export interface ExcuseItem {
 export interface ExcusesResponse {
   excuse1: ExcuseItem;
   excuse2: ExcuseItem;
-  excuse3: ExcuseItem;
+  comedicStyle: string; // The style used for excuse2 (Risky excuse)
 }
 
 // Form dropdown options
@@ -57,6 +57,7 @@ export interface GenerateExcusesRequest {
 
 export interface GenerateImageRequest {
   excuseText: string;
+  comedicStyle: string; // The comedic style from the excuse
   headshotBase64?: string;
   headshotMimeType?: string;
 }

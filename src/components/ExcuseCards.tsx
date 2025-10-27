@@ -1,42 +1,33 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import type { ExcusesResponse } from '@/types';
-import { getRandomExcuseTitle } from '@/lib/constants';
 import ExcuseCard from './ExcuseCard';
 import { cn } from '@/lib/utils';
 
 interface ExcuseCardsProps {
   excuses: ExcusesResponse | null;
   isVisible: boolean;
-  onTabChange?: (excuseType: 'excuse1' | 'excuse2' | 'excuse3') => void;
+  onTabChange?: (excuseType: 'excuse1' | 'excuse2') => void;
 }
 
-type ExcuseType = 'technical' | 'believable' | 'outrageous';
+type ExcuseType = 'believable' | 'risky';
 
 export default function ExcuseCards({ excuses, isVisible, onTabChange }: ExcuseCardsProps) {
   const [activeTab, setActiveTab] = useState<ExcuseType>('believable');
 
-  // Generate random titles once when excuses are loaded
+  // Map excuses to UI tabs (use titles from API)
   const excuseData = useMemo(() => {
     if (!excuses) return null;
 
     return {
-      technical: {
-        ...excuses.excuse1,
-        title: getRandomExcuseTitle('technical'),
-        type: 'technical' as const,
-        accentColor: 'blue' as const,
-      },
       believable: {
-        ...excuses.excuse2,
-        title: getRandomExcuseTitle('believable'),
+        ...excuses.excuse1,
         type: 'believable' as const,
         accentColor: 'purple' as const,
       },
-      outrageous: {
-        ...excuses.excuse3,
-        title: getRandomExcuseTitle('outrageous'),
-        type: 'outrageous' as const,
+      risky: {
+        ...excuses.excuse2,
+        type: 'risky' as const,
         accentColor: 'green' as const,
       },
     };
@@ -46,10 +37,9 @@ export default function ExcuseCards({ excuses, isVisible, onTabChange }: ExcuseC
     setActiveTab(excuseType);
 
     // Map UI tab type to API excuse type and notify parent
-    const excuseTypeMap: Record<ExcuseType, 'excuse1' | 'excuse2' | 'excuse3'> = {
-      technical: 'excuse1',
-      believable: 'excuse2',
-      outrageous: 'excuse3',
+    const excuseTypeMap: Record<ExcuseType, 'excuse1' | 'excuse2'> = {
+      believable: 'excuse1',
+      risky: 'excuse2',
     };
 
     onTabChange?.(excuseTypeMap[excuseType]);
@@ -60,9 +50,8 @@ export default function ExcuseCards({ excuses, isVisible, onTabChange }: ExcuseC
   }
 
   const tabs: { type: ExcuseType; label: string; emoji?: string }[] = [
-    { type: 'technical', label: 'Technical' },
     { type: 'believable', label: 'Believable' },
-    { type: 'outrageous', label: 'Outrageous', emoji: '✨' },
+    { type: 'risky', label: 'Risky!', emoji: '✨' },
   ];
 
   const activeExcuse = excuseData[activeTab];
@@ -77,7 +66,7 @@ export default function ExcuseCards({ excuses, isVisible, onTabChange }: ExcuseC
       <div className="flex justify-center gap-2 mb-8 max-w-2xl mx-auto">
         {tabs.map(({ type, label, emoji }) => {
           const isActive = activeTab === type;
-          const isOutrageous = type === 'outrageous';
+          const isRisky = type === 'risky';
 
           return (
             <button
@@ -89,8 +78,8 @@ export default function ExcuseCards({ excuses, isVisible, onTabChange }: ExcuseC
                 isActive
                   ? 'bg-accent-green text-background shadow-lg shadow-accent-green/30 scale-105'
                   : 'bg-background-card text-text-secondary hover:text-text-primary hover:bg-background-input',
-                isOutrageous && !isActive && 'outrageous-tab',
-                isOutrageous && 'focus:ring-accent-green'
+                isRisky && !isActive && 'outrageous-tab',
+                isRisky && 'focus:ring-accent-green'
               )}
               aria-pressed={isActive}
               aria-label={`Show ${label} excuse`}
@@ -100,7 +89,7 @@ export default function ExcuseCards({ excuses, isVisible, onTabChange }: ExcuseC
                 {emoji && (
                   <span className={cn(
                     'text-lg',
-                    isOutrageous && !isActive && 'animate-pulse'
+                    isRisky && !isActive && 'animate-pulse'
                   )}>
                     {emoji}
                   </span>
