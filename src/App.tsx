@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import type { ExcusesResponse, GenerateImageResponse } from '@/types';
+import type { ExcusesResponse, GenerateImageResponse, CustomExcuseOptions } from '@/types';
 import { getRandomVariation, type TaglineVariation } from '@/lib/taglineVariations';
 import AnimatedBackground from '@/components/AnimatedBackground';
 import Header from '@/components/Header';
@@ -41,7 +41,11 @@ function App() {
     setVariation(getRandomVariation());
   }, []);
 
-  const generateExcuses = async (data: { scenario: string; audience: string }) => {
+  const generateExcuses = async (data: {
+    scenario: string;
+    audience: string;
+    customOptions?: CustomExcuseOptions;
+  }) => {
     try {
       setIsGeneratingExcuses(true);
       setError(null);

@@ -4,7 +4,100 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Status
 
-**Current Phase: Phase 3 - Image Generation Integration & UX Polish (COMPLETE)**
+**Current Phase: Phase 4 - Custom Excuse Generation Feature (COMPLETE)**
+
+### ✅ Phase 4 Completion: "Customise" Feature for Advanced Excuse Generation
+
+**Major Accomplishments (2025-10-27):**
+
+#### 1. Customise Feature Implementation
+- **Feature Name:** "Customise" (previously "Spice It Up" - renamed for better UX psychology)
+- **Purpose:** Optional advanced excuse generation with user control over style, narrative elements, and focus
+- **Design Philosophy:** Non-intrusive, preserves value of free tier, prepares for future monetization
+- **New Component:** `CustomiseModal.tsx` - compact modal with all customization options
+- **Button Design:** Subtle grey button (~20% width of main button) - visually de-emphasized
+- **Auto-close:** Modal automatically closes when excuse generation completes
+
+#### 2. Customization Options (9 Comedy Styles + 8 Narrative Elements + 9 Excuse Focus)
+**Comedy Styles (9 total):**
+- Surprise Me (default - random selection)
+- Absurdist, Observational, Deadpan, Hyperbolic, Self-Deprecating, Ironic, Meta, Paranoid
+
+**Special Ingredients - Always Available (8 total):**
+- 🐦 Barrister Pigeon
+- 🦆 Suspicious Duck
+- 🐕 Dog with Shifty Eyes
+- 🎩 Victorian Gentleman
+- 👽 Alien Involvement
+- 🌧️ Freak Weather
+- 🤖 Robot Malfunction
+- ⏰ Time Traveler
+
+**Special Ingredients - Limited Time (5 seasonal, date-based):**
+- 💘 Cupid's Revenge (Feb 1-14)
+- 🐰 Easter Bunny (Mar 15 - Apr 30)
+- 🎆 Fireworks Disaster (Jul 1-14)
+- 🎃 Halloween Chaos (Oct 1-31)
+- 🎅 Santa's Fault (Dec 1-25)
+
+**Excuse Focus (9 total):**
+- Let AI Decide (default)
+- Blame Technology, Blame Nature, Blame Animals, Blame Other People
+- Blame Yourself, Blame Universe, Blame Transport, Blame Time Itself
+
+**Selection Rules:**
+- Comedy Style: Single selection (radio behavior)
+- Narrative Elements: Up to 3 selections (always available + limited time combined)
+- Excuse Focus: Single selection (radio behavior)
+
+#### 3. Advanced Prompt Engineering
+- **Additive & Empowering:** Custom options enhance creativity, don't constrain it
+- **Natural Language:** "Weave these in naturally", "seasoning not the main dish"
+- **Creative Freedom:** "Primarily" instead of "only", explicit permission for flexibility
+- **Paragraph Formatting:** Longer excuses (4+ sentences) automatically broken into 2-3 paragraphs for readability
+- **Backward Compatible:** Simple "Generate Excuses" button works unchanged (no custom options)
+
+#### 4. UI/UX Design Decisions
+**Button Hierarchy:**
+- Main button: "Generate Excuses" (green, 4x width, prominent)
+- Customise button: "Customise" (subtle grey, 1x width, ~20% of main button)
+- No emoji on Customise button - clean, understated
+
+**Modal Design:**
+- Compact 600px width with tighter spacing
+- Two-column layout on desktop (Comedy Style | Excuse Focus)
+- Single column on mobile (fully responsive)
+- Loading state stays inside modal
+- Auto-close on completion
+
+**Visual Hierarchy:**
+- Limited Time elements have purple tint/accent to distinguish from always-available
+- Selection counter shows "X/3 selected" with color feedback
+- Checkboxes disable when max limit reached
+
+#### 5. Freemium Strategy Preparation
+- Feature designed to NOT devalue the free tier
+- "Customise" = optional enhancement, not necessary upgrade
+- Neutral naming avoids FOMO (fear of missing out)
+- Modal architecture ready for future video ad integration
+- Respects free users while providing clear upsell value
+
+**Verified Working (2025-10-27):**
+- ✅ Customise button with subtle grey styling
+- ✅ Modal with all customization options (9 styles, 8+ elements, 9 focus options)
+- ✅ Auto-close modal after generation
+- ✅ Paragraph formatting in longer excuses
+- ✅ Limited time elements show/hide based on current date
+- ✅ Selection limits enforced (max 3 narrative elements)
+- ✅ Responsive design across all breakpoints
+- ✅ Backward compatible with simple generation
+
+**Future Enhancement Note:**
+- The customization approach implemented for excuse generation should be replicated for photo/image generation in a future update
+- This would allow users to customize image styles, visual elements, and composition preferences
+- Same modal-based UI pattern and freemium strategy should apply
+
+---
 
 ### ✅ Phase 3 Completion: Comedic Style System & Image Preview Modal
 
@@ -146,9 +239,10 @@ notmyfault/
 │   ├── components/         # React components (ALL COMPLETE)
 │   │   ├── Header.tsx      # Navigation header with logo
 │   │   ├── Hero.tsx        # Landing hero section
-│   │   ├── ExcuseForm.tsx  # Form for excuse generation
+│   │   ├── ExcuseForm.tsx  # Form for excuse generation with Customise button
 │   │   ├── ExcuseCards.tsx # Display generated excuses
 │   │   ├── ExcuseCard.tsx  # Individual excuse card
+│   │   ├── CustomiseModal.tsx   # Advanced excuse customization modal
 │   │   ├── PhotoEvidence.tsx    # Image generation & upload
 │   │   ├── ImageDisplay.tsx     # Image display with clickable preview
 │   │   ├── ImageModal.tsx       # Full-screen preview modal
@@ -156,9 +250,12 @@ notmyfault/
 │   │   ├── LoadingAnimation.tsx  # Loading state
 │   │   └── ErrorMessage.tsx      # Error display
 │   ├── lib/                # Utility functions
-│   │   └── utils.ts        # cn() helper for Tailwind classes
+│   │   ├── utils.ts        # cn() helper for Tailwind classes
+│   │   ├── constants.ts    # App constants (loading messages, file constraints, etc.)
+│   │   ├── spiceItUpOptions.ts  # Customise feature options (styles, elements, focus)
+│   │   └── taglineVariations.ts # Hero tagline variations
 │   ├── types/              # TypeScript type definitions
-│   │   └── index.ts        # Shared types
+│   │   └── index.ts        # Shared types + CustomExcuseOptions
 │   ├── App.tsx             # Main application component
 │   ├── main.tsx            # Entry point
 │   └── index.css           # Global styles with Tailwind v4 theme
@@ -208,6 +305,12 @@ notmyfault/
 - ✅ Tailwind CSS v4 custom dark theme working
 - ✅ Local development environment with custom API server
 - ✅ Claude API integration for excuse generation (2 excuses with 8 comedic styles)
+- ✅ **Customise feature** - Advanced excuse generation with user control
+  - 9 comedy styles (including "Surprise Me")
+  - 8 always-available narrative elements + 5 seasonal elements
+  - 9 excuse focus options
+  - Compact modal with auto-close on completion
+  - Paragraph formatting for longer excuses (4+ sentences)
 - ✅ Gemini 2.5 Flash Image API for image generation with style matching
 - ✅ Full-screen image preview modal with download functionality
 - ✅ Drag-and-drop headshot upload with file validation

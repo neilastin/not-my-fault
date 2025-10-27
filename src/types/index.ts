@@ -50,9 +50,16 @@ export type AudienceOption =
   | 'Anyone and everyone';
 
 // API request types
+export interface CustomExcuseOptions {
+  style?: string; // If specified, use this style instead of random
+  narrativeElements?: string[]; // IDs of selected narrative elements (max 3)
+  excuseFocus?: string; // ID of selected excuse focus
+}
+
 export interface GenerateExcusesRequest {
   scenario: string;
   audience: AudienceOption;
+  customOptions?: CustomExcuseOptions; // Optional Customise customization
 }
 
 export interface GenerateImageRequest {
