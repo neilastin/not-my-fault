@@ -352,7 +352,7 @@ test.describe('Image Generation - Landscape Orientation', () => {
 });
 
 test.describe('Image Generation - Cross-Viewport Consistency', () => {
-  test('should maintain functionality across all viewports', async ({ page, viewport }) => {
+  test('should maintain functionality across all viewports', async ({ page }) => {
     // This test runs on default viewport from playwright.config.ts
 
     await generateExcuses(page);

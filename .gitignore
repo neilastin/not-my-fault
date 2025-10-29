@@ -35,3 +35,6 @@ lerna-debug.log*
 
 # Vercel
 .vercel
+
+# Private documentation (not for public repo)
+RATE-LIMITING-NOTES.md

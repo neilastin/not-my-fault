@@ -98,13 +98,6 @@ function App() {
       // Use 'Observational' style for excuse1 (believable), actual style for excuse2 (risky)
       const styleToUse = excuseType === 'excuse1' ? 'Observational' : excuses.comedicStyle;
 
-      // Debug logging
-      console.log('=== IMAGE GENERATION DEBUG ===');
-      console.log('Excuse type:', excuseType);
-      console.log('Excuses object:', excuses);
-      console.log('Style to use:', styleToUse);
-      console.log('==============================');
-
       const response = await fetch('/api/generate-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -7,6 +7,97 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
  * Supports optional headshot compositing
  */
 
+// ============================================================================
+// RATE LIMITING
+// ============================================================================
+
+interface RateLimitEntry {
+  count: number;
+  resetTime: number;
+}
+
+const rateLimitStore = new Map<string, RateLimitEntry>();
+
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 10; // 10 requests per minute (lower for image generation)
+
+/**
+ * Check rate limit for a given client IP
+ * Returns { limited: true } if rate limit exceeded
+ */
+function checkRateLimit(req: VercelRequest): { limited: boolean } {
+  // Extract client IP from Vercel headers
+  const xRealIp = req.headers['x-real-ip'];
+  const xForwardedFor = req.headers['x-forwarded-for'];
+
+  let clientIp: string;
+
+  if (xRealIp && typeof xRealIp === 'string') {
+    clientIp = xRealIp;
+  } else if (xForwardedFor) {
+    // x-forwarded-for can be string or string[]
+    const forwardedIp = Array.isArray(xForwardedFor) ? xForwardedFor[0] : xForwardedFor;
+    // Take first IP from comma-separated list
+    clientIp = forwardedIp.split(',')[0].trim();
+  } else {
+    // Fallback to a default (should rarely happen in Vercel)
+    clientIp = 'unknown';
+  }
+
+  const now = Date.now();
+  const entry = rateLimitStore.get(clientIp);
+
+  // Periodic cleanup (1% chance per request to clean expired entries)
+  if (Math.random() < 0.01) {
+    const entriesToDelete: string[] = [];
+    rateLimitStore.forEach((data, ip) => {
+      if (now > data.resetTime) {
+        entriesToDelete.push(ip);
+      }
+    });
+    entriesToDelete.forEach(ip => rateLimitStore.delete(ip));
+  }
+
+  // If no entry or reset time passed, create new window
+  if (!entry || now > entry.resetTime) {
+    rateLimitStore.set(clientIp, {
+      count: 1,
+      resetTime: now + RATE_LIMIT_WINDOW_MS
+    });
+    return { limited: false };
+  }
+
+  // Check if limit exceeded
+  if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return { limited: true };
+  }
+
+  // Increment count
+  entry.count++;
+  rateLimitStore.set(clientIp, entry);
+  return { limited: false };
+}
+
+/**
+ * Extract client IP for logging
+ */
+function getClientIp(req: VercelRequest): string {
+  const xRealIp = req.headers['x-real-ip'];
+  const xForwardedFor = req.headers['x-forwarded-for'];
+
+  if (xRealIp && typeof xRealIp === 'string') {
+    return xRealIp;
+  } else if (xForwardedFor) {
+    const forwardedIp = Array.isArray(xForwardedFor) ? xForwardedFor[0] : xForwardedFor;
+    return forwardedIp.split(',')[0].trim();
+  }
+  return 'unknown';
+}
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
 interface RequestBody {
   excuseText: string;
   comedicStyle: string;
@@ -22,6 +113,9 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
+  const startTime = Date.now();
+  const clientIp = getClientIp(req);
+
   // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({
@@ -29,8 +123,37 @@ export default async function handler(
     });
   }
 
+  // Check rate limit
+  const rateLimitResult = checkRateLimit(req);
+  if (rateLimitResult.limited) {
+    console.log(JSON.stringify({
+      timestamp: new Date().toISOString(),
+      endpoint: '/api/generate-image',
+      clientIp: clientIp,
+      status: 'rate_limited',
+      responseTimeMs: Date.now() - startTime
+    }));
+    return res.status(429).json({
+      error: 'Too many requests. Please try again in a few moments.'
+    });
+  }
+
   try {
     const { excuseText, comedicStyle, headshotBase64, headshotMimeType } = req.body as RequestBody;
+
+    // Log request received
+    console.log(JSON.stringify({
+      timestamp: new Date().toISOString(),
+      endpoint: '/api/generate-image',
+      clientIp: clientIp,
+      status: 'request_received',
+      metadata: {
+        excuseTextLength: excuseText ? excuseText.length : 0,
+        comedicStyle: comedicStyle,
+        hasHeadshot: !!headshotBase64,
+        headshotMimeType: headshotBase64 ? headshotMimeType : undefined
+      }
+    }));
 
     // Validate required inputs
     if (!excuseText) {
@@ -93,7 +216,7 @@ export default async function handler(
       // Validate that it's decodable
       try {
         Buffer.from(headshotBase64, 'base64');
-      } catch (decodeError) {
+      } catch {
         return res.status(400).json({
           error: 'Invalid image format. Please upload a valid image file.'
         });
@@ -528,7 +651,7 @@ PHOTO QUALITY:
 
     try {
       // Build the request parts array
-      const requestParts: any[] = [];
+      const requestParts: Array<{ inline_data?: { mime_type: string; data: string }; text?: string }> = [];
 
       // Add headshot as inline_data if provided (must come before text prompt)
       if (headshotBase64 && headshotMimeType) {
@@ -572,12 +695,6 @@ PHOTO QUALITY:
 
       if (!response.ok) {
         const errorData = await response.text();
-        let errorJson;
-        try {
-          errorJson = JSON.parse(errorData);
-        } catch {
-          errorJson = null;
-        }
 
         // Sanitized error logging (only first 200 chars, no sensitive data)
         console.error('Gemini API HTTP error:', {
@@ -680,20 +797,50 @@ PHOTO QUALITY:
       };
 
       clearTimeout(timeoutId);
+
+      // Log successful response
+      console.log(JSON.stringify({
+        timestamp: new Date().toISOString(),
+        endpoint: '/api/generate-image',
+        clientIp: clientIp,
+        status: 'success',
+        responseTimeMs: Date.now() - startTime,
+        metadata: {
+          comedicStyle: comedicStyle,
+          hasHeadshot: !!headshotBase64,
+          imageMimeType: mimeType,
+          imageSizeBytes: imageBase64.length
+        }
+      }));
+
       return res.status(200).json(imageResponse);
 
-    } catch (fetchError: any) {
+    } catch (fetchError: unknown) {
       clearTimeout(timeoutId);
 
       // Handle timeout specifically
-      if (fetchError.name === 'AbortError') {
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
         console.error('Gemini 2.5 Flash Image API timeout after 60s');
+        console.log(JSON.stringify({
+          timestamp: new Date().toISOString(),
+          endpoint: '/api/generate-image',
+          clientIp: clientIp,
+          status: 'error_timeout',
+          responseTimeMs: Date.now() - startTime
+        }));
         return res.status(504).json({
           error: 'Request timed out. Please try again.'
         });
       }
 
       console.error('Error generating image:', fetchError);
+      console.log(JSON.stringify({
+        timestamp: new Date().toISOString(),
+        endpoint: '/api/generate-image',
+        clientIp: clientIp,
+        status: 'error_api_call',
+        responseTimeMs: Date.now() - startTime
+      }));
       return res.status(500).json({
         error: 'An unexpected error occurred. Please try again.'
       });
@@ -701,6 +848,13 @@ PHOTO QUALITY:
 
   } catch (error) {
     console.error('Error generating image:', error);
+    console.log(JSON.stringify({
+      timestamp: new Date().toISOString(),
+      endpoint: '/api/generate-image',
+      clientIp: clientIp,
+      status: 'error_unexpected',
+      responseTimeMs: Date.now() - startTime
+    }));
     return res.status(500).json({
       error: 'An unexpected error occurred. Please try again.'
     });

@@ -21,7 +21,6 @@ if (result.error) {
   console.error('Error loading .env.local:', result.error);
 } else {
   const parsed = result.parsed || {};
-  console.log(`Loaded ${Object.keys(parsed).length} environment variables from .env.local`);
 
   // Manually set them in process.env to ensure they're available
   Object.keys(parsed).forEach(key => {
@@ -29,10 +28,6 @@ if (result.error) {
       process.env[key] = parsed[key];
     }
   });
-
-  // Verify the keys are actually in process.env
-  console.log('ANTHROPIC_API_KEY available:', !!process.env.ANTHROPIC_API_KEY);
-  console.log('GEMINI_API_KEY available:', !!process.env.GEMINI_API_KEY);
 }
 
 const PORT = 3001;

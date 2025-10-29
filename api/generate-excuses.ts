@@ -9,6 +9,93 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
  */
 
 // ============================================================================
+// RATE LIMITING
+// ============================================================================
+
+interface RateLimitEntry {
+  count: number;
+  resetTime: number;
+}
+
+const rateLimitStore = new Map<string, RateLimitEntry>();
+
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 20; // 20 requests per minute
+
+/**
+ * Check rate limit for a given client IP
+ * Returns { limited: true } if rate limit exceeded
+ */
+function checkRateLimit(req: VercelRequest): { limited: boolean } {
+  // Extract client IP from Vercel headers
+  const xRealIp = req.headers['x-real-ip'];
+  const xForwardedFor = req.headers['x-forwarded-for'];
+
+  let clientIp: string;
+
+  if (xRealIp && typeof xRealIp === 'string') {
+    clientIp = xRealIp;
+  } else if (xForwardedFor) {
+    // x-forwarded-for can be string or string[]
+    const forwardedIp = Array.isArray(xForwardedFor) ? xForwardedFor[0] : xForwardedFor;
+    // Take first IP from comma-separated list
+    clientIp = forwardedIp.split(',')[0].trim();
+  } else {
+    // Fallback to a default (should rarely happen in Vercel)
+    clientIp = 'unknown';
+  }
+
+  const now = Date.now();
+  const entry = rateLimitStore.get(clientIp);
+
+  // Periodic cleanup (1% chance per request to clean expired entries)
+  if (Math.random() < 0.01) {
+    const entriesToDelete: string[] = [];
+    rateLimitStore.forEach((data, ip) => {
+      if (now > data.resetTime) {
+        entriesToDelete.push(ip);
+      }
+    });
+    entriesToDelete.forEach(ip => rateLimitStore.delete(ip));
+  }
+
+  // If no entry or reset time passed, create new window
+  if (!entry || now > entry.resetTime) {
+    rateLimitStore.set(clientIp, {
+      count: 1,
+      resetTime: now + RATE_LIMIT_WINDOW_MS
+    });
+    return { limited: false };
+  }
+
+  // Check if limit exceeded
+  if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return { limited: true };
+  }
+
+  // Increment count
+  entry.count++;
+  rateLimitStore.set(clientIp, entry);
+  return { limited: false };
+}
+
+/**
+ * Extract client IP for logging
+ */
+function getClientIp(req: VercelRequest): string {
+  const xRealIp = req.headers['x-real-ip'];
+  const xForwardedFor = req.headers['x-forwarded-for'];
+
+  if (xRealIp && typeof xRealIp === 'string') {
+    return xRealIp;
+  } else if (xForwardedFor) {
+    const forwardedIp = Array.isArray(xForwardedFor) ? xForwardedFor[0] : xForwardedFor;
+    return forwardedIp.split(',')[0].trim();
+  }
+  return 'unknown';
+}
+
+// ============================================================================
 // TYPES
 // ============================================================================
 
@@ -346,6 +433,9 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
+  const startTime = Date.now();
+  const clientIp = getClientIp(req);
+
   // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({
@@ -353,8 +443,39 @@ export default async function handler(
     });
   }
 
+  // Check rate limit
+  const rateLimitResult = checkRateLimit(req);
+  if (rateLimitResult.limited) {
+    console.log(JSON.stringify({
+      timestamp: new Date().toISOString(),
+      endpoint: '/api/generate-excuses',
+      clientIp: clientIp,
+      status: 'rate_limited',
+      responseTimeMs: Date.now() - startTime
+    }));
+    return res.status(429).json({
+      error: 'Too many requests. Please try again in a few moments.'
+    });
+  }
+
   try {
     const { scenario, audience, customOptions } = req.body as RequestBody;
+
+    // Log request received
+    console.log(JSON.stringify({
+      timestamp: new Date().toISOString(),
+      endpoint: '/api/generate-excuses',
+      clientIp: clientIp,
+      status: 'request_received',
+      metadata: {
+        scenario: scenario ? scenario.substring(0, 50) + (scenario.length > 50 ? '...' : '') : undefined,
+        audience: audience,
+        hasCustomOptions: !!customOptions,
+        customStyle: customOptions?.style,
+        narrativeElementsCount: customOptions?.narrativeElements?.length || 0,
+        excuseFocus: customOptions?.excuseFocus
+      }
+    }));
 
     // ========================================================================
     // VALIDATION - Basic inputs
@@ -441,14 +562,6 @@ export default async function handler(
       ? buildExcuseFocusPrompt(customOptions.excuseFocus)
       : '';
 
-    // Debug logging
-    console.log('=== EXCUSE GENERATION DEBUG ===');
-    console.log('Scenario:', scenario.substring(0, 50) + '...');
-    console.log('Audience:', audience);
-    console.log('Selected style:', selectedStyle);
-    console.log('Custom options:', customOptions || 'none');
-    console.log('================================');
-
     // ========================================================================
     // BUILD CLAUDE PROMPT
     // ========================================================================
@@ -534,7 +647,7 @@ DO NOT include any text outside the JSON object. DO NOT use markdown code blocks
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const apiResponse = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -556,10 +669,10 @@ DO NOT include any text outside the JSON object. DO NOT use markdown code blocks
 
       clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        const errorData = await response.text();
+      if (!apiResponse.ok) {
+        const errorData = await apiResponse.text();
         console.error('Claude API error:', {
-          status: response.status,
+          status: apiResponse.status,
           errorPreview: errorData.substring(0, 200),
           timestamp: new Date().toISOString()
         });
@@ -568,7 +681,7 @@ DO NOT include any text outside the JSON object. DO NOT use markdown code blocks
         });
       }
 
-      const data = await response.json();
+      const data = await apiResponse.json();
 
       // Parse Claude's JSON response
       const excusesText = data.content[0].text;
@@ -582,7 +695,7 @@ DO NOT include any text outside the JSON object. DO NOT use markdown code blocks
       let excuses: ExcusesResponse;
       try {
         excuses = JSON.parse(cleanedText);
-      } catch (parseError) {
+      } catch {
         console.error('Failed to parse Claude response:', cleanedText.substring(0, 200));
         return res.status(500).json({
           error: 'Failed to process excuses. Please try again.'
@@ -598,23 +711,53 @@ DO NOT include any text outside the JSON object. DO NOT use markdown code blocks
       }
 
       // Return excuses to browser with the comedic style
-      return res.status(200).json({
+      const response = {
         ...excuses,
         comedicStyle: selectedStyle
-      });
+      };
 
-    } catch (fetchError: any) {
+      // Log successful response
+      console.log(JSON.stringify({
+        timestamp: new Date().toISOString(),
+        endpoint: '/api/generate-excuses',
+        clientIp: clientIp,
+        status: 'success',
+        responseTimeMs: Date.now() - startTime,
+        metadata: {
+          comedicStyle: selectedStyle,
+          excuse1Length: excuses.excuse1.text.length,
+          excuse2Length: excuses.excuse2.text.length
+        }
+      }));
+
+      return res.status(200).json(response);
+
+    } catch (fetchError: unknown) {
       clearTimeout(timeoutId);
 
       // Handle timeout specifically
-      if (fetchError.name === 'AbortError') {
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
         console.error('Claude API timeout after 30s');
+        console.log(JSON.stringify({
+          timestamp: new Date().toISOString(),
+          endpoint: '/api/generate-excuses',
+          clientIp: clientIp,
+          status: 'error_timeout',
+          responseTimeMs: Date.now() - startTime
+        }));
         return res.status(504).json({
           error: 'Request timed out. Please try again.'
         });
       }
 
       console.error('Error calling Claude API:', fetchError);
+      console.log(JSON.stringify({
+        timestamp: new Date().toISOString(),
+        endpoint: '/api/generate-excuses',
+        clientIp: clientIp,
+        status: 'error_api_call',
+        responseTimeMs: Date.now() - startTime
+      }));
       return res.status(500).json({
         error: 'An unexpected error occurred. Please try again.'
       });
@@ -622,6 +765,13 @@ DO NOT include any text outside the JSON object. DO NOT use markdown code blocks
 
   } catch (error) {
     console.error('Error generating excuses:', error);
+    console.log(JSON.stringify({
+      timestamp: new Date().toISOString(),
+      endpoint: '/api/generate-excuses',
+      clientIp: clientIp,
+      status: 'error_unexpected',
+      responseTimeMs: Date.now() - startTime
+    }));
     return res.status(500).json({
       error: 'An unexpected error occurred. Please try again.'
     });
