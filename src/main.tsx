@@ -9,7 +9,7 @@ import App from './App.tsx'
 // Get your free Sentry DSN at: https://sentry.io/signup/
 // Then replace 'YOUR_SENTRY_DSN_HERE' with your actual DSN
 Sentry.init({
-  dsn: 'https://9414dda3539ab343e4c3cabe2bdf7170@o4510272581795840.ingest.de.sentry.io/4510272632193104',
+  dsn: 'https://afeb94547e3e7da7e590c40e9228d319@o4510272581795840.ingest.de.sentry.io/4510272635732048',
   environment: import.meta.env.DEV ? 'development' : 'production',
   // Only send events in production (comment this out to test in development)
   enabled: !import.meta.env.DEV,
