@@ -3,29 +3,47 @@ import { Sparkles } from 'lucide-react';
 
 export default function Header() {
   return (
-    <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-white/5">
+    <header className="fixed top-0 w-full z-50 bg-background border-b border-white/5">
       <div className="max-w-container mx-auto px-mobile md:px-desktop py-3">
-        <div className="flex flex-col items-center justify-center gap-3">
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight">
-            <span className="text-white">Not My</span>
-            <span className="ml-2 bg-gradient-to-r from-accent-green to-accent-blue bg-clip-text text-transparent">
-              Fault
-            </span>
-          </h1>
+        <div className="flex items-center justify-center gap-2">
+          {/* Logo - Left side */}
+          <img
+            src="/logo.svg"
+            alt="Barrister Pigeon Logo"
+            className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0"
+          />
 
-          {/* AI Badge moved from Hero */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-accent-green/10 to-accent-blue/10 border border-accent-green/20">
-              <Sparkles className="w-4 h-4 text-accent-green" />
-              <span className="text-sm font-medium text-accent-green">
-                AI-Powered Excuse Generation
+          {/* Title and Badge - Centered between logos */}
+          <div className="flex flex-col gap-2 items-center">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight whitespace-nowrap">
+              <span className="text-white">Not </span>
+              <span className="bg-gradient-to-r from-accent-green to-accent-blue bg-clip-text text-transparent">
+                My
               </span>
-            </div>
-          </motion.div>
+              <span className="text-white"> Fault</span>
+            </h1>
+
+            {/* AI Badge - Centered under title */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-accent-green/10 to-accent-blue/10 border border-accent-green/20">
+                <Sparkles className="w-4 h-4 text-accent-green flex-shrink-0" />
+                <span className="text-xs font-medium text-accent-green whitespace-nowrap tracking-wider">
+                  AI-Powered Excuses
+                </span>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Logo - Right side (mirrored) */}
+          <img
+            src="/logo.svg"
+            alt="Barrister Pigeon Logo"
+            className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0 scale-x-[-1]"
+          />
         </div>
       </div>
     </header>

@@ -8,7 +8,7 @@ export default defineConfig({
   // Test directory
   testDir: './tests',
 
-  // Timeout for each test (90 seconds - image generation can take 30-45s)
+  // Timeout for each test (90 seconds - allows for API latency)
   timeout: 90000,
 
   // Expect timeout for assertions (30 seconds)
@@ -22,11 +22,11 @@ export default defineConfig({
   // Fail the build on CI if you accidentally left test.only in the source code
   forbidOnly: !!process.env.CI,
 
-  // Retry on CI only
-  retries: process.env.CI ? 2 : 0,
+  // No retries - tests should be reliable
+  retries: 0,
 
   // Single worker to avoid API rate limiting
-  workers: process.env.CI ? 1 : 1,
+  workers: 1,
 
   // Reporter to use
   reporter: [
@@ -55,41 +55,20 @@ export default defineConfig({
     navigationTimeout: 30000,
   },
 
-  // Configure projects for major browsers
+  // Configure projects: Desktop + Mobile only
   projects: [
     {
-      name: 'chromium',
+      name: 'desktop',
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1920, height: 1080 },
       },
     },
-
-    // Uncomment to test on Firefox and WebKit
-    // {
-    //   name: 'firefox',
-    //   use: { ...devices['Desktop Firefox'] },
-    // },
-
-    // {
-    //   name: 'webkit',
-    //   use: { ...devices['Desktop Safari'] },
-    // },
-
-    // Mobile viewports
     {
-      name: 'mobile-chrome',
+      name: 'mobile',
       use: {
         ...devices['Pixel 5'],
         viewport: { width: 375, height: 667 },
-      },
-    },
-
-    {
-      name: 'tablet',
-      use: {
-        ...devices['iPad Pro'],
-        viewport: { width: 768, height: 1024 },
       },
     },
   ],

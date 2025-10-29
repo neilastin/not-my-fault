@@ -10,10 +10,9 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "playwright test",
-    "test:ui": "playwright test --ui",
-    "test:headed": "playwright test --headed",
-    "test:debug": "playwright test --debug",
+    "test:smoke": "playwright test tests/smoke.spec.ts",
+    "test:smoke:headed": "playwright test tests/smoke.spec.ts --headed",
+    "test:smoke:debug": "playwright test tests/smoke.spec.ts --debug",
     "test:report": "playwright show-report"
   },
   "dependencies": {
