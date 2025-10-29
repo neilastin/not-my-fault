@@ -19,21 +19,22 @@ window.Sentry = Sentry;
 
 Sentry.init({
   dsn: 'https://afeb94547e3e7da7e590c40e9228d319@o4510272581795840.ingest.de.sentry.io/4510272635732048',
-  // SIMPLIFIED FOR TESTING - Remove environment and enabled filters temporarily
-  // environment: import.meta.env.DEV ? 'development' : 'production',
-  // enabled: !import.meta.env.DEV,
+  environment: import.meta.env.DEV ? 'development' : 'production',
 
-  // Minimal config for testing
+  // Performance monitoring
   tracesSampleRate: 1.0,
 
-  // TEMPORARILY DISABLE INTEGRATIONS FOR TESTING
-  // integrations: [
-  //   Sentry.browserTracingIntegration(),
-  //   Sentry.replayIntegration({
-  //     maskAllText: true,
-  //     blockAllMedia: true,
-  //   }),
-  // ],
+  // Session replay configuration
+  replaysOnErrorSampleRate: 1.0, // Capture 100% of sessions with errors
+  replaysSessionSampleRate: 0.1,  // Capture 10% of all sessions
+
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration({
+      maskAllText: true,    // Privacy: Protects user excuses from being recorded
+      blockAllMedia: true,  // Privacy: Protects user-uploaded photos from being recorded
+    }),
+  ],
 })
 
 // Simple error fallback component for Sentry ErrorBoundary
