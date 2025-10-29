@@ -10,22 +10,21 @@ import App from './App.tsx'
 // Then replace 'YOUR_SENTRY_DSN_HERE' with your actual DSN
 Sentry.init({
   dsn: 'https://afeb94547e3e7da7e590c40e9228d319@o4510272581795840.ingest.de.sentry.io/4510272635732048',
-  environment: import.meta.env.DEV ? 'development' : 'production',
-  // Only send events in production (comment this out to test in development)
-  enabled: !import.meta.env.DEV,
-  // Capture 100% of transactions for performance monitoring (low traffic app)
+  // SIMPLIFIED FOR TESTING - Remove environment and enabled filters temporarily
+  // environment: import.meta.env.DEV ? 'development' : 'production',
+  // enabled: !import.meta.env.DEV,
+
+  // Minimal config for testing
   tracesSampleRate: 1.0,
-  // Capture 100% of sessions with errors for replay
-  replaysOnErrorSampleRate: 1.0,
-  // Capture 10% of all sessions for general replay analysis
-  replaysSessionSampleRate: 0.1,
-  integrations: [
-    Sentry.browserTracingIntegration(),
-    Sentry.replayIntegration({
-      maskAllText: true,    // Privacy: Protects user excuses from being recorded
-      blockAllMedia: true,  // Privacy: Protects user-uploaded photos from being recorded
-    }),
-  ],
+
+  // TEMPORARILY DISABLE INTEGRATIONS FOR TESTING
+  // integrations: [
+  //   Sentry.browserTracingIntegration(),
+  //   Sentry.replayIntegration({
+  //     maskAllText: true,
+  //     blockAllMedia: true,
+  //   }),
+  // ],
 })
 
 // Simple error fallback component for Sentry ErrorBoundary
