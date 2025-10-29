@@ -9,7 +9,7 @@ import App from './App.tsx'
 // Get your free Sentry DSN at: https://sentry.io/signup/
 // Then replace 'YOUR_SENTRY_DSN_HERE' with your actual DSN
 Sentry.init({
-  dsn: 'YOUR_SENTRY_DSN_HERE',
+  dsn: 'https://9414dda3539ab343e4c3cabe2bdf7170@o4510272581795840.ingest.de.sentry.io/4510272632193104',
   environment: import.meta.env.DEV ? 'development' : 'production',
   // Only send events in production (comment this out to test in development)
   enabled: !import.meta.env.DEV,
@@ -22,8 +22,8 @@ Sentry.init({
   integrations: [
     Sentry.browserTracingIntegration(),
     Sentry.replayIntegration({
-      maskAllText: false,
-      blockAllMedia: false,
+      maskAllText: true,    // Privacy: Protects user excuses from being recorded
+      blockAllMedia: true,  // Privacy: Protects user-uploaded photos from being recorded
     }),
   ],
 })
