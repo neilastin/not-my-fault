@@ -8,6 +8,15 @@ import App from './App.tsx'
 // Initialize Sentry error monitoring
 // Get your free Sentry DSN at: https://sentry.io/signup/
 // Then replace 'YOUR_SENTRY_DSN_HERE' with your actual DSN
+
+// Expose Sentry globally for debugging/testing
+declare global {
+  interface Window {
+    Sentry: typeof Sentry;
+  }
+}
+window.Sentry = Sentry;
+
 Sentry.init({
   dsn: 'https://afeb94547e3e7da7e590c40e9228d319@o4510272581795840.ingest.de.sentry.io/4510272635732048',
   // SIMPLIFIED FOR TESTING - Remove environment and enabled filters temporarily
